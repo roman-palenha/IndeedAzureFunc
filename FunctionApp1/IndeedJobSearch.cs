@@ -29,7 +29,7 @@ namespace FunctionApp1
                 var uri = _uri + $"{query}&location={integrationSettings["la_indeedlocation"]}";
 
                 if (!integrationSettings["la_indeedlocalization"].ToString().Equals(DoNotIncludeLocal))
-                    uri += $"&locality={integrationSettings.FormattedValues["la_indeedlocalization"]}";
+                    uri += $"&locality={integrationSettings.FormattedValues["la_indeedlocalization"].ToString().ToLower()}";
 
                 var configuration = service.Retrieve("la_apiconfiguration", new Guid("2bd2c8b3-a17c-ed11-81ac-002248d73072"), new ColumnSet("la_name", "la_requesturl", "la_xrapidapihost", "la_xrapidapikey"));
 
