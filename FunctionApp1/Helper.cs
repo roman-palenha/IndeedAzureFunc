@@ -1,16 +1,10 @@
 ﻿using FunctionApp1.Models;
-using Microsoft.Azure.WebJobs.Host;
-using Microsoft.Crm.Sdk.Messages;
-using Microsoft.Data.OData.Query.SemanticAst;
 using Microsoft.Extensions.Logging;
 using Microsoft.Xrm.Sdk;
 using Microsoft.Xrm.Tooling.Connector;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
-using System.Security.Policy;
-using System.ServiceModel.Channels;
-using System.Text.Json.Nodes;
 
 namespace FunctionApp1
 {
