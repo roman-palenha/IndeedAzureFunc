@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Newtonsoft.Json;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -8,9 +9,13 @@ namespace FunctionApp1.Models
 {
     public class IndeedResponse
     {
-        public int count { get; set; }
-        public List<IndeedHit> hits { get; set; }
-        public string indeed_final_url { get; set; }
-        public object suggest_locality { get; set; }
+        [JsonProperty("count")]
+        public int Count { get; set; }
+        [JsonProperty("hits")]
+        public List<IndeedHit> Hits { get; set; }
+        [JsonProperty("indeed_final_url")]
+        public string FinalUrl { get; set; }
+        [JsonProperty("suggest_locality")]
+        public object SuggestLocality { get; set; }
     }
 }

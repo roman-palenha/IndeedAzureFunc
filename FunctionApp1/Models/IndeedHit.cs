@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Newtonsoft.Json;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -8,14 +9,23 @@ namespace FunctionApp1.Models
 {
     public class IndeedHit
     {
-        public string city { get; set; }
-        public string company_name { get; set; }
-        public string country { get; set; }
-        public string id { get; set; }
-        public string link { get; set; }
-        public string locality { get; set; }
-        public string location { get; set; }
-        public string title { get; set; }
-        public string zip { get; set; }
+        [JsonProperty("id")]
+        public string Id { get; set; }
+        [JsonProperty("title")]
+        public string Title { get; set; }
+        [JsonProperty("city")]
+        public string City { get; set; }
+        [JsonProperty("company_name")]
+        public string Company { get; set; }
+        [JsonProperty("country")]
+        public string Country { get; set; }
+        [JsonProperty("link")]
+        public string Link { get; set; }
+        [JsonProperty("locality")]
+        public string Locality { get; set; }
+        [JsonProperty("location")]
+        public string Location { get; set; }
+        [JsonProperty("zip")]
+        public string Zip { get; set; }
     }
 }

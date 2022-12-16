@@ -43,7 +43,7 @@ namespace FunctionApp1
         public static IEnumerable<IndeedHit> GetIndeedHitsFromResponse(string response)
         {
             var indeedResponse = JsonConvert.DeserializeObject<IndeedResponse>(response);
-            return indeedResponse.hits;
+            return indeedResponse.Hits;
         }
 
         private static string GetConnectionString()

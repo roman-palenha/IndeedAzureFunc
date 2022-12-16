@@ -1,12 +1,16 @@
+using FunctionApp1.Constants;
 using FunctionApp1.Models;
+using FunctionApp1.Services.Interfaces;
 using Microsoft.Azure.WebJobs;
 using Microsoft.Azure.WebJobs.Host;
 using Microsoft.Crm.Sdk.Messages;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Xrm.Sdk;
 using Microsoft.Xrm.Sdk.Query;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Net.Http;
 using System.Threading.Tasks;
 using System.Web.Services.Description;
@@ -15,11 +19,6 @@ namespace FunctionApp1
 {
     public static class IndeedJobSearch
     {
-        private const string DoNotIncludeLocal = "Do not include in request";
-        private const string _uri = "https://indeed12.p.rapidapi.com/jobs/search?query=";
-        private const string _apiKey = "X-RapidAPI-Key";
-        private const string _apiHost = "X-RapidAPI-Host";
-
         [FunctionName("IndeedJobSearch")]
         public static async Task Run([TimerTrigger("* 0 7 * * 1-5" , RunOnStartup=true)]TimerInfo myTimer, ILogger log)
         {
@@ -29,60 +28,73 @@ namespace FunctionApp1
                 var uri = GetUri(service);
                 var apiConfiguration = GetApiConfiguration(service);
 
-                var client = new HttpClient();
-                var request = new HttpRequestMessage
-                {
-                    Method = HttpMethod.Get,
-                    RequestUri = new Uri(uri),
-                    Headers =
-                    {
-                        { _apiKey, apiConfiguration.ApiKey },
-                        { _apiHost, apiConfiguration.ApiHost },
-                    },
-                };
+                var serviceProvider = Startup.ConfigureIndeedServices();
+                var searchJobService = serviceProvider.GetService<ISearchJobService>();
 
-                await SendRequestAsync(client, request, service);
+                var vacancies = await searchJobService.SendRequestAsync(uri, apiConfiguration);
+                CreateVacancies(service, vacancies);
             }   
         }
 
         private static string GetUri(IOrganizationService service)
         {
-            var integrationSettings = service.Retrieve("la_integrationsetting", new Guid("06709d5f-a57c-ed11-81ac-002248d73072"), new ColumnSet("la_name", "la_jobsportal", "la_query", "la_indeedlocalization", "la_indeedlocation"));
+            var integrationName = Environment.GetEnvironmentVariable("IntegrationSettings");
+            var integrationColumns = new ColumnSet(IntegrationSettings.Name, IntegrationSettings.JobPortal, IntegrationSettings.Query, IntegrationSettings.Localization, IntegrationSettings.Location);
+            var expr = new QueryExpression
+            {
+                EntityName = EntityName.IntegrationSettings,
+                ColumnSet = integrationColumns
+            };
 
-            var query = Helper.CheckAndReplaceQuery(integrationSettings["la_query"].ToString());
-            var uri = _uri + $"{query}&location={integrationSettings["la_indeedlocation"]}";
+            var integrationSettings  = service.RetrieveMultiple(expr)
+                .Entities
+                .FirstOrDefault(x => x.Attributes[IntegrationSettings.Name].ToString().Equals(integrationName)); 
+            
+            var query = Helper.CheckAndReplaceQuery(integrationSettings[IntegrationSettings.Query].ToString());
+            var uri = JobSearch.Url + JobSearch.Query + $"{query}" + JobSearch.Location + $"{integrationSettings[IntegrationSettings.Location]}";
 
-            if (!integrationSettings.FormattedValues["la_indeedlocalization"].ToString().Equals(DoNotIncludeLocal))
-                uri += $"&locality={integrationSettings.FormattedValues["la_indeedlocalization"].ToString().ToLower()}";
+            if (((OptionSetValue)integrationSettings[IntegrationSettings.Localization]).Value != (int)Localization.DontIncludeLocalization)
+                uri += JobSearch.Locality + $"{integrationSettings.FormattedValues[IntegrationSettings.Localization].ToLower()}";
 
             return uri;
         }
 
         private static ApiConfiguration GetApiConfiguration(IOrganizationService service)
         {
-            var configuration = service.Retrieve("la_apiconfiguration", new Guid("2bd2c8b3-a17c-ed11-81ac-002248d73072"), new ColumnSet("la_name", "la_requesturl", "la_xrapidapihost", "la_xrapidapikey"));
-            var apiConfiguration = new ApiConfiguration { ApiHost = configuration["la_xrapidapihost"].ToString(), ApiKey = configuration["la_xrapidapikey"].ToString() };
+            var configurationName = Environment.GetEnvironmentVariable("ApiConfiguration");
+            var configurationColumns = new ColumnSet(ConfigurationSettings.Name, ConfigurationSettings.RequestUrl, ConfigurationSettings.RapidHost, ConfigurationSettings.RapidKey);
+            var expr = new QueryExpression
+            {
+                EntityName = EntityName.ConfigurationSettings,
+                ColumnSet = configurationColumns
+            };
+
+            var configuration = service.RetrieveMultiple(expr)
+                .Entities
+                .FirstOrDefault(x => x.Attributes[ConfigurationSettings.Name].ToString().Equals(configurationName));
+
+            var apiConfiguration = new ApiConfiguration
+            { 
+                ApiHost = configuration[ConfigurationSettings.RapidHost].ToString(), 
+                ApiKey = configuration[ConfigurationSettings.RapidKey].ToString()
+            };
 
             return apiConfiguration;
         }
 
-        private static async Task SendRequestAsync(HttpClient client, HttpRequestMessage request, IOrganizationService service)
+        private static async Task ReadFromReponse(IOrganizationService service, HttpContent responseContent)
         {
-            using (var response = await client.SendAsync(request))
-            {
-                response.EnsureSuccessStatusCode();
-                var body = await response.Content.ReadAsStringAsync();
-                var vacancies = Helper.GetIndeedHitsFromResponse(body);
-                CreateVacancies(service, vacancies);
-            }
+            var body = await responseContent.ReadAsStringAsync();
+            var vacancies = Helper.GetIndeedHitsFromResponse(body);
+            CreateVacancies(service, vacancies);
         }
 
         private static void CreateVacancies(IOrganizationService service, IEnumerable<IndeedHit> vacancies)
         {
             foreach (var v in vacancies)
             {
-                var vacancyEntity = new Entity("la_coldlead");
-                vacancyEntity["la_name"] = v.title;
+                var vacancyEntity = new Entity(EntityName.ColdLeads);
+                vacancyEntity[ColdLead.Name] = v.Title;
                 service.Create(vacancyEntity);
             }
         }
