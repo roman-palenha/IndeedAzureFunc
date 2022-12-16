@@ -27,12 +27,7 @@ namespace FunctionApp1
 
             if (service != null)
             {
-                Guid userid = ((WhoAmIResponse)service.Execute(new WhoAmIRequest())).UserId;
-
-                if (userid != Guid.Empty)
-                {
-                    log.LogInformation("Connection Established Successfully...");
-                }
+                log.LogInformation("Connection Established Successfully...");
             }
             else
             {
@@ -55,12 +50,7 @@ namespace FunctionApp1
 
         private static string GetConnectionString()
         {
-            var url = Environment.GetEnvironmentVariable("D365ServiceUrl");
-            var username = Environment.GetEnvironmentVariable("Login");
-            var password = Environment.GetEnvironmentVariable("Password");
-
-            string conn = $"AuthType=Office365;Username={username}; Password={password};Url={url}";
-
+            var conn = Environment.GetEnvironmentVariable("ConnectionString");
             return conn;
         }
     }
