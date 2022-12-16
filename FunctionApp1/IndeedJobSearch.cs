@@ -82,13 +82,6 @@ namespace FunctionApp1
             return apiConfiguration;
         }
 
-        private static async Task ReadFromReponse(IOrganizationService service, HttpContent responseContent)
-        {
-            var body = await responseContent.ReadAsStringAsync();
-            var vacancies = Helper.GetIndeedHitsFromResponse(body);
-            CreateVacancies(service, vacancies);
-        }
-
         private static void CreateVacancies(IOrganizationService service, IEnumerable<IndeedHit> vacancies)
         {
             foreach (var v in vacancies)
