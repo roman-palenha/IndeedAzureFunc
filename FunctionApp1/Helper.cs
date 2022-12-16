@@ -18,12 +18,10 @@ namespace FunctionApp1
     {
         public static IOrganizationService Connection(ILogger log)
         {
-            IOrganizationService service = null;
-
             var conn = GetConnectionString();
 
             var svc = new CrmServiceClient(conn);
-            service = svc.OrganizationWebProxyClient != null ? svc.OrganizationWebProxyClient : (IOrganizationService)svc.OrganizationServiceProxy;
+            IOrganizationService service = svc.OrganizationWebProxyClient != null ? svc.OrganizationWebProxyClient : (IOrganizationService)svc.OrganizationServiceProxy;
 
             if (service != null)
             {

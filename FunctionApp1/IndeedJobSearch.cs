@@ -52,7 +52,7 @@ namespace FunctionApp1
             var query = Helper.CheckAndReplaceQuery(integrationSettings["la_query"].ToString());
             var uri = _uri + $"{query}&location={integrationSettings["la_indeedlocation"]}";
 
-            if (!integrationSettings["la_indeedlocalization"].ToString().Equals(DoNotIncludeLocal))
+            if (!integrationSettings.FormattedValues["la_indeedlocalization"].ToString().Equals(DoNotIncludeLocal))
                 uri += $"&locality={integrationSettings.FormattedValues["la_indeedlocalization"].ToString().ToLower()}";
 
             return uri;
