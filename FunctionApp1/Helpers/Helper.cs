@@ -6,7 +6,7 @@ using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 
-namespace FunctionApp1
+namespace FunctionApp1.Helpers
 {
     public static class Helper
     {
