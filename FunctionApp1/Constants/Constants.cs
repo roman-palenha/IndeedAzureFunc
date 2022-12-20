@@ -29,7 +29,7 @@
         public const string Name = "la_name";
         public const string ExternalId = "la_externalid";
         public const string Url = "la_url";
-        public const string Description = "la_description";
+        public const string Description = "crc14_description";
         public const string CreatedOn = "la_postcreatedon";
     }
 
@@ -45,5 +45,21 @@
         public const string Query = "?query=";
         public const string Location = "&location=";
         public const string Locality = "&locality=";
+    }
+
+    public static class JobDetails
+    {
+        public const string Url = "https://indeed12.p.rapidapi.com/job/";
+    }
+
+    public static class IndeedHitConstants
+    {
+        public const string More30Days = "30+ days ago";
+        public const string JustPosted = "Just Posted";
+    }
+
+    public static class AzureTable
+    {
+        public const string IndeedJobs = "IndeedJobs";
     }
 }

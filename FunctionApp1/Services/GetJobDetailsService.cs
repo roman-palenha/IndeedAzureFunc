@@ -4,14 +4,16 @@ using FunctionApp1.Models;
 using FunctionApp1.Services.Interfaces;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Net.Http;
+using System.Text;
 using System.Threading.Tasks;
 
 namespace FunctionApp1.Services
 {
-    public class SearchJobService : ISearchJobService
+    public class GetJobDetailsService : IGetJobDetailsService
     {
-        public async Task<IEnumerable<IndeedHit>> SendRequestAsync(string uri, ApiConfiguration apiConfiguration)
+        public async Task<IndeedJobDetails> SendRequestAsync(string uri, ApiConfiguration apiConfiguration)
         {
             var client = new HttpClient();
             var request = new HttpRequestMessage
@@ -29,8 +31,8 @@ namespace FunctionApp1.Services
             {
                 response.EnsureSuccessStatusCode();
                 var body = await response.Content.ReadAsStringAsync();
-                var vacancies = IndeedHelper.GetIndeedHitsFromResponse(body);
-                return vacancies;
+                var details = IndeedHelper.GetJobDetails(body);
+                return details;
             }
         }
     }

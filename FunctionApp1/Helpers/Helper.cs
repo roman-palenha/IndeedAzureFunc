@@ -1,8 +1,10 @@
-﻿using FunctionApp1.Models;
+﻿using FunctionApp1.Constants;
+using FunctionApp1.Models;
+using Microsoft.Crm.Sdk.Messages;
 using Microsoft.Extensions.Logging;
 using Microsoft.Xrm.Sdk;
+using Microsoft.Xrm.Sdk.Messages;
 using Microsoft.Xrm.Tooling.Connector;
-using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 
@@ -34,10 +36,48 @@ namespace FunctionApp1.Helpers
             return result;
         }
 
-        public static IEnumerable<IndeedHit> GetIndeedHitsFromResponse(string response)
+        public static void BulkCreate(IOrganizationService service, IEnumerable<IndeedJobDetails> jobDetails)
         {
-            var indeedResponse = JsonConvert.DeserializeObject<IndeedResponse>(response);
-            return indeedResponse.Hits;
+            ExecuteMultipleRequest request = new ExecuteMultipleRequest()
+            {
+                Settings = new ExecuteMultipleSettings()
+                {
+                    ContinueOnError = false,
+                    ReturnResponses = true
+                },
+                Requests = new OrganizationRequestCollection()
+            };
+
+            foreach (var d in jobDetails)
+            {
+                Entity detailEntity = new Entity(EntityName.ColdLeads);
+                detailEntity[ColdLead.Name] = d.Title;
+                detailEntity[ColdLead.Url] = d.FinalUrl;
+                detailEntity[ColdLead.ExternalId] = d.JobId;
+                detailEntity[ColdLead.Description] = d.Description;
+                detailEntity[ColdLead.CreatedOn] = ParseIndeedCreationDate(d.CreationDate);
+
+                CreateRequest cr = new CreateRequest { Target = detailEntity };
+                request.Requests.Add(cr);
+            }
+
+           var response =  service.Execute(request);
+        }
+
+        private static DateTime ParseIndeedCreationDate(string creationDate)
+        {
+            var dateTime = DateTime.Now;
+            if (creationDate == IndeedHitConstants.JustPosted)
+            {
+                return dateTime;
+            }
+            else
+            {
+                var days = int.Parse(creationDate.Split(' ')[0]);
+                dateTime = dateTime.Subtract(TimeSpan.FromDays(days));
+            }
+        
+            return dateTime;
         }
 
         private static string GetConnectionString()

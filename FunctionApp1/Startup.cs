@@ -10,7 +10,8 @@ namespace FunctionApp1
         public static IServiceProvider ConfigureIndeedServices()
         {
             var services = new ServiceCollection()
-                .AddSingleton<ISearchJobService, SearchJobService>();
+                .AddSingleton<ISearchJobService, SearchJobService>()
+                .AddSingleton<IGetJobDetailsService, GetJobDetailsService>();
 
             return services.BuildServiceProvider();
         }

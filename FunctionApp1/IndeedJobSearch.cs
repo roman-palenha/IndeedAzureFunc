@@ -23,18 +23,44 @@ namespace FunctionApp1
             IOrganizationService service = Helper.Connection(log);
             if (service != null)
             {
-                var uri = GetUri(service);
-                var apiConfiguration = GetApiConfiguration(service);
+                var uri = GetSearchUri(service);
+                var apiConfiguration = IndeedHelper.GetApiConfiguration(service);
 
                 var serviceProvider = Startup.ConfigureIndeedServices();
                 var searchJobService = serviceProvider.GetService<ISearchJobService>();
+                var getDetailsService = serviceProvider.GetService<IGetJobDetailsService>();
 
                 var vacancies = await searchJobService.SendRequestAsync(uri, apiConfiguration);
-                CreateVacancies(service, vacancies);
+                var details = new List<IndeedJobDetails>();
+
+                foreach(var v in vacancies)
+                {
+                    uri = GetDetailsUri(service, v.Id);
+                    var detail = await getDetailsService.SendRequestAsync(uri, apiConfiguration);
+                    if(detail.CreationDate != IndeedHitConstants.More30Days)
+                    {
+                        var indeedBlob = new IndeedBlob
+                        {
+                            Description = detail.Description,
+                            Title = detail.Title,
+                            Url = detail.FinalUrl
+                        };
+                        var hash = indeedBlob.GetHashCode();
+                        var existed = AzureHelper.GetRecordFromTable(v.Id);
+                        if(existed == null)
+                        {
+                            detail.JobId = v.Id;
+                            details.Add(detail);
+                            AzureHelper.InsertRecordToTable(v.Id, hash.ToString());
+                        }
+                    }  
+                }
+
+                Helper.BulkCreate(service, details);
             }   
         }
 
-        private static string GetUri(IOrganizationService service)
+        private static string GetSearchUri(IOrganizationService service)
         {
             var integrationName = Environment.GetEnvironmentVariable("IntegrationSettings");
             var integrationColumns = new ColumnSet(IntegrationSettings.Name, IntegrationSettings.JobPortal, IntegrationSettings.Query, IntegrationSettings.Localization, IntegrationSettings.Location);
@@ -57,27 +83,10 @@ namespace FunctionApp1
             return uri;
         }
 
-        private static ApiConfiguration GetApiConfiguration(IOrganizationService service)
+        private static string GetDetailsUri(IOrganizationService service, string id)
         {
-            var configurationName = Environment.GetEnvironmentVariable("ApiConfiguration");
-            var configurationColumns = new ColumnSet(ConfigurationSettings.Name, ConfigurationSettings.RequestUrl, ConfigurationSettings.RapidHost, ConfigurationSettings.RapidKey);
-            var expr = new QueryExpression
-            {
-                EntityName = EntityName.ConfigurationSettings,
-                ColumnSet = configurationColumns
-            };
-
-            var configuration = service.RetrieveMultiple(expr)
-                .Entities
-                .FirstOrDefault(x => x.Attributes[ConfigurationSettings.Name].ToString().Equals(configurationName));
-
-            var apiConfiguration = new ApiConfiguration
-            { 
-                ApiHost = configuration[ConfigurationSettings.RapidHost].ToString(), 
-                ApiKey = configuration[ConfigurationSettings.RapidKey].ToString()
-            };
-
-            return apiConfiguration;
+            var uri = JobDetails.Url + id;
+            return uri;
         }
 
         private static void CreateVacancies(IOrganizationService service, IEnumerable<IndeedHit> vacancies)
