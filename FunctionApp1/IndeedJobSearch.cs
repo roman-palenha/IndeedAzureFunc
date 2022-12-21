@@ -57,8 +57,8 @@ namespace FunctionApp1
                     }  
                 }
 
-                Helper.BulkCreate(service, details);
-                log.LogInformation($"Created {details.Count} records.");
+                var response = Helper.BulkCreate(service, details);
+                response.CheckFault(log);
             }   
         }
 
@@ -89,6 +89,23 @@ namespace FunctionApp1
         {
             var uri = JobDetails.Url + id;
             return uri;
+        }
+
+        private static void CheckFault(this OrganizationResponse ResponseItemObj, ILogger log)
+        {
+            foreach (KeyValuePair<string, object> results in ResponseItemObj.Results)
+            {
+                if (results.Value.GetType() == typeof(ExecuteMultipleResponseItemCollection))
+                {
+                    foreach (ExecuteMultipleResponseItem executeResp in (ExecuteMultipleResponseItemCollection)results.Value)
+                    {
+                        if (executeResp.Fault != null)
+                        {
+                            log.LogError(executeResp.Fault.Message);
+                        }
+                    }
+                }
+            }
         }
     }
 }

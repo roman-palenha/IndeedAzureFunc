@@ -36,7 +36,7 @@ namespace FunctionApp1.Helpers
             return result;
         }
 
-        public static void BulkCreate(IOrganizationService service, IEnumerable<IndeedJobDetails> jobDetails)
+        public static OrganizationResponse BulkCreate(IOrganizationService service, IEnumerable<IndeedJobDetails> jobDetails)
         {
             ExecuteMultipleRequest request = new ExecuteMultipleRequest()
             {
@@ -62,6 +62,7 @@ namespace FunctionApp1.Helpers
             }
 
            var response =  service.Execute(request);
+            return response;
         }
 
         private static DateTime ParseIndeedCreationDate(string creationDate)

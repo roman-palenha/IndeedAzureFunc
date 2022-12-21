@@ -3,6 +3,7 @@ using FunctionApp1.Helpers;
 using FunctionApp1.Models;
 using Microsoft.Azure.WebJobs;
 using Microsoft.Extensions.Logging;
+using Microsoft.Xrm.Sdk;
 using Microsoft.Xrm.Sdk.Query;
 using Newtonsoft.Json;
 using System;
@@ -19,22 +20,14 @@ namespace FunctionApp1
         public static async Task<object> Run([HttpTrigger(WebHookType = "genericJson")] HttpRequestMessage req, ILogger log)
         {
             var jsonContent = await req.Content.ReadAsStringAsync();
-            var content = JsonConvert.DeserializeObject<CrmRequestBody>(jsonContent);
-
-            var entityId = content.PrimaryEntityId;
-
+           
             var service = Helper.Connection(log);
-            var coldLeadsColumns = new ColumnSet(ColdLead.Name, ColdLead.Url, ColdLead.Description, ColdLead.ExternalId, ColdLead.CreatedOn);
-            var expr = new QueryExpression
+            if(service == null)
             {
-                EntityName = EntityName.ColdLeads,
-                ColumnSet = coldLeadsColumns
-            };
+                return req.CreateResponse(HttpStatusCode.Unauthorized);
+            }
 
-            var deleteEntity = service.Retrieve(EntityName.ColdLeads, new Guid(entityId), coldLeadsColumns);
-            var deleteId = deleteEntity[ColdLead.ExternalId].ToString();
-            log.LogInformation($"Pulled record with external id: {deleteId}");
-
+            var deleteId = GetColdLeadExternalId(service, jsonContent, log);
             var records = AzureHelper.GetRecordsFromTable();
 
             if (records.Any(x => x.Id == deleteId))
@@ -47,6 +40,19 @@ namespace FunctionApp1
             }
                 
             return req.CreateResponse(HttpStatusCode.OK);
+        }
+
+        private static string GetColdLeadExternalId(IOrganizationService service, string body, ILogger log)
+        {
+            var content = JsonConvert.DeserializeObject<CrmRequestBody>(body);
+            var entityId = content.PrimaryEntityId;
+
+            var coldLeadsColumns = new ColumnSet(ColdLead.Name, ColdLead.Url, ColdLead.Description, ColdLead.ExternalId, ColdLead.CreatedOn);
+            var deleteEntity = service.Retrieve(EntityName.ColdLeads, new Guid(entityId), coldLeadsColumns);
+            var deleteId = deleteEntity[ColdLead.ExternalId].ToString();
+            log.LogInformation($"Pulled record with external id: {deleteId}");
+
+            return deleteId;
         }
     }
 }
