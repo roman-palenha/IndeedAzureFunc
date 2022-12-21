@@ -16,6 +16,7 @@ namespace FunctionApp1.Helpers
             var conn = GetConnectionString();
 
             var svc = new CrmServiceClient(conn);
+            log.LogError(svc.LastCrmError);
             IOrganizationService service = svc.OrganizationWebProxyClient != null ? svc.OrganizationWebProxyClient : (IOrganizationService)svc.OrganizationServiceProxy;
 
             if (service != null)
