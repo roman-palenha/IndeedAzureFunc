@@ -6,6 +6,7 @@ using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Web.Services.Description;
 
 namespace JobPostingIntegrationFunctions.Helpers
 {
@@ -38,6 +39,23 @@ namespace JobPostingIntegrationFunctions.Helpers
             };
 
             return apiConfiguration;
+        }
+
+        public static Entity GetIntegrationSettings(IOrganizationService service)
+        {
+            var integrationName = Environment.GetEnvironmentVariable("IntegrationSettings");
+            var integrationColumns = new ColumnSet(IntegrationSettings.Name, IntegrationSettings.JobPortal, IntegrationSettings.Query, IntegrationSettings.Localization, IntegrationSettings.Location, IntegrationSettings.NumberOfPages);
+            var expr = new QueryExpression
+            {
+                EntityName = EntityName.IntegrationSettings,
+                ColumnSet = integrationColumns
+            };
+
+            var integrationSettings = service.RetrieveMultiple(expr)
+                .Entities
+                .FirstOrDefault(x => x.Attributes[IntegrationSettings.Name].ToString().Equals(integrationName));
+
+            return integrationSettings;
         }
 
         public static IndeedJobDetails GetJobDetails(string response)

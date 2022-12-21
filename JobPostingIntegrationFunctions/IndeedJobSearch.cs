@@ -1,6 +1,7 @@
 using JobPostingIntegrationFunctions.Constants;
 using JobPostingIntegrationFunctions.Helpers;
 using JobPostingIntegrationFunctions.Models;
+using JobPostingIntegrationFunctions.Services;
 using JobPostingIntegrationFunctions.Services.Interfaces;
 using Microsoft.Azure.WebJobs;
 using Microsoft.Azure.WebJobs.Host;
@@ -11,7 +12,9 @@ using Microsoft.Xrm.Sdk.Query;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Security.Policy;
 using System.Threading.Tasks;
+using System.Web.Services.Description;
 
 namespace JobPostingIntegrationFunctions
 {
@@ -23,64 +26,66 @@ namespace JobPostingIntegrationFunctions
             IOrganizationService service = Helper.Connection(log);
             if (service != null)
             {
-                var uri = GetSearchUri(service);
-                var apiConfiguration = IndeedHelper.GetApiConfiguration(service);
-
                 var serviceProvider = Startup.ConfigureIndeedServices();
                 var searchJobService = serviceProvider.GetService<ISearchJobService>();
                 var getDetailsService = serviceProvider.GetService<IGetJobDetailsService>();
-
-                var vacancies = await searchJobService.SendRequestAsync(uri, apiConfiguration);
-                var details = new List<IndeedJobDetails>();
-                log.LogInformation($"Pulled {vacancies.Count()} vacancies from Indeed");
-
-                foreach (var v in vacancies)
+                var integrationSettings = IndeedHelper.GetIntegrationSettings(service);
+                var pages = int.Parse(integrationSettings[IntegrationSettings.NumberOfPages].ToString());
+                for(int i = 1; i <= pages; ++i)
                 {
-                    uri = GetDetailsUri(service, v.Id);
-                    var detail = await getDetailsService.SendRequestAsync(uri, apiConfiguration);
-                    if (detail.CreationDate != IndeedHitConstants.More30Days)
-                    {
-                        var indeedBlob = new IndeedBlob
-                        {
-                            Description = detail.Description,
-                            Title = detail.Title,
-                            Url = detail.FinalUrl
-                        };
-                        var hash = indeedBlob.GetHashCode();
-                        var existed = AzureHelper.GetRecordFromTable(v.Id);
-                        if (existed == null)
-                        {
-                            detail.JobId = v.Id;
-                            details.Add(detail);
-                            AzureHelper.InsertRecordToTable(v.Id, hash.ToString());
-                        }
-                    }
+                    await SearchJobsAsync(service, searchJobService, getDetailsService, log, i);
                 }
-
-                var response = Helper.BulkCreate(service, details);
-                response.CheckFault(log);
+               
             }
         }
 
-        private static string GetSearchUri(IOrganizationService service)
+        private static async Task SearchJobsAsync(IOrganizationService service, ISearchJobService searchJobService, IGetJobDetailsService getDetailsService, ILogger log, int page)
         {
-            var integrationName = Environment.GetEnvironmentVariable("IntegrationSettings");
-            var integrationColumns = new ColumnSet(IntegrationSettings.Name, IntegrationSettings.JobPortal, IntegrationSettings.Query, IntegrationSettings.Localization, IntegrationSettings.Location);
-            var expr = new QueryExpression
+            var uri = GetSearchUri(service, page);
+            var apiConfiguration = IndeedHelper.GetApiConfiguration(service);
+
+            var vacancies = await searchJobService.SendRequestAsync(uri, apiConfiguration);
+            var details = new List<IndeedJobDetails>();
+            log.LogInformation($"Pulled {vacancies.Count()} vacancies from Indeed");
+
+            foreach (var v in vacancies)
             {
-                EntityName = EntityName.IntegrationSettings,
-                ColumnSet = integrationColumns
-            };
+                uri = GetDetailsUri(service, v.Id);
+                var detail = await getDetailsService.SendRequestAsync(uri, apiConfiguration);
+                if (detail.CreationDate != IndeedHitConstants.More30Days)
+                {
+                    var indeedBlob = new IndeedBlob
+                    {
+                        Description = detail.Description,
+                        Title = detail.Title,
+                        Url = detail.FinalUrl
+                    };
+                    var hash = indeedBlob.GetHashCode();
+                    var existed = AzureHelper.GetRecordFromTable(v.Id);
+                    if (existed == null)
+                    {
+                        detail.JobId = v.Id;
+                        details.Add(detail);
+                        AzureHelper.InsertRecordToTable(v.Id, hash.ToString());
+                    }
+                }
+            }
 
-            var integrationSettings = service.RetrieveMultiple(expr)
-                .Entities
-                .FirstOrDefault(x => x.Attributes[IntegrationSettings.Name].ToString().Equals(integrationName));
+            var response = Helper.BulkCreate(service, details);
+            response.CheckFault(log);
+        }
+    
 
+        private static string GetSearchUri(IOrganizationService service, int page)
+        {
+            var integrationSettings = IndeedHelper.GetIntegrationSettings(service);
             var query = Helper.CheckAndReplaceQuery(integrationSettings[IntegrationSettings.Query].ToString());
             var uri = JobSearch.Url + JobSearch.Query + $"{query}" + JobSearch.Location + $"{integrationSettings[IntegrationSettings.Location]}";
 
             if (((OptionSetValue)integrationSettings[IntegrationSettings.Localization]).Value != (int)Localization.DontIncludeLocalization)
                 uri += JobSearch.Locality + $"{integrationSettings.FormattedValues[IntegrationSettings.Localization].ToLower()}";
+
+            uri += JobSearch.Page + page.ToString();
 
             return uri;
         }

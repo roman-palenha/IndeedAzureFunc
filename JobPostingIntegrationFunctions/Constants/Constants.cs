@@ -14,6 +14,7 @@
         public const string Query = "la_query";
         public const string Localization = "la_indeedlocalization";
         public const string Location = "la_indeedlocation";
+        public const string NumberOfPages = "la_numberofpages";
     }
 
     public static class ConfigurationSettings
@@ -45,6 +46,7 @@
         public const string Query = "?query=";
         public const string Location = "&location=";
         public const string Locality = "&locality=";
+        public const string Page = "&page_id=";
     }
 
     public static class JobDetails
