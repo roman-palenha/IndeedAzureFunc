@@ -1,7 +1,7 @@
 ﻿using Newtonsoft.Json;
 using System;
 
-namespace FunctionApp1.Models
+namespace JobPostingIntegrationFunctions.Models
 {
     public class CrmRequestBody
     {

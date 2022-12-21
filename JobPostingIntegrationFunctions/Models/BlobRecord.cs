@@ -1,6 +1,6 @@
 ﻿using Microsoft.WindowsAzure.Storage.Table;
 
-namespace FunctionApp1.Models
+namespace JobPostingIntegrationFunctions.Models
 {
     public class BlobRecord : TableEntity
     {

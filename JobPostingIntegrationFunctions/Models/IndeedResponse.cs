@@ -1,7 +1,7 @@
 ﻿using Newtonsoft.Json;
 using System.Collections.Generic;
 
-namespace FunctionApp1.Models
+namespace JobPostingIntegrationFunctions.Models
 {
     public class IndeedResponse
     {

@@ -1,9 +1,9 @@
-﻿using FunctionApp1.Services;
-using FunctionApp1.Services.Interfaces;
+﻿using JobPostingIntegrationFunctions.Services;
+using JobPostingIntegrationFunctions.Services.Interfaces;
 using Microsoft.Extensions.DependencyInjection;
 using System;
 
-namespace FunctionApp1
+namespace JobPostingIntegrationFunctions
 {
     public static class Startup
     {

@@ -1,12 +1,12 @@
-﻿using FunctionApp1.Constants;
-using FunctionApp1.Helpers;
-using FunctionApp1.Models;
-using FunctionApp1.Services.Interfaces;
+﻿using JobPostingIntegrationFunctions.Constants;
+using JobPostingIntegrationFunctions.Helpers;
+using JobPostingIntegrationFunctions.Models;
+using JobPostingIntegrationFunctions.Services.Interfaces;
 using System;
 using System.Net.Http;
 using System.Threading.Tasks;
 
-namespace FunctionApp1.Services
+namespace JobPostingIntegrationFunctions.Services
 {
     public class GetJobDetailsService : IGetJobDetailsService
     {

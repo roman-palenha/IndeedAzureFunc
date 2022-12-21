@@ -1,7 +1,8 @@
-using FunctionApp1.Constants;
-using FunctionApp1.Helpers;
-using FunctionApp1.Models;
-using FunctionApp1.Services.Interfaces;
+using JobPostingIntegrationFunctions.Constants;
+using JobPostingIntegrationFunctions.Helpers;
+using JobPostingIntegrationFunctions.Models;
+using JobPostingIntegrationFunctions.Services.Interfaces;
+using JobPostingIntegrationFunctions.Helpers;
 using Microsoft.Azure.WebJobs;
 using Microsoft.Azure.WebJobs.Host;
 using Microsoft.Extensions.DependencyInjection;
@@ -13,7 +14,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace FunctionApp1
+namespace JobPostingIntegrationFunctions
 {
     public static class IndeedJobSearch
     {

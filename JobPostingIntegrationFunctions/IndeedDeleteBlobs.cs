@@ -1,6 +1,7 @@
-using FunctionApp1.Constants;
-using FunctionApp1.Helpers;
-using FunctionApp1.Models;
+using JobPostingIntegrationFunctions.Constants;
+using JobPostingIntegrationFunctions.Helpers;
+using JobPostingIntegrationFunctions.Models;
+using JobPostingIntegrationFunctions.Helpers;
 using Microsoft.Azure.WebJobs;
 using Microsoft.Extensions.Logging;
 using Microsoft.Xrm.Sdk;
@@ -12,7 +13,7 @@ using System.Net;
 using System.Net.Http;
 using System.Threading.Tasks;
 
-namespace FunctionApp1
+namespace JobPostingIntegrationFunctions
 {
     public static class IndeedDeleteBlobs
     {
