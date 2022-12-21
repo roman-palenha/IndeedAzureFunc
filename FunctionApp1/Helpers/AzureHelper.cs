@@ -1,6 +1,4 @@
 ﻿using FunctionApp1.Models;
-using Microsoft.Azure.WebJobs;
-using Microsoft.Azure.WebJobs.Host;
 using Microsoft.WindowsAzure.Storage;
 using Microsoft.WindowsAzure.Storage.Queue;
 using Microsoft.WindowsAzure.Storage.Table;
@@ -13,7 +11,6 @@ namespace FunctionApp1.Helpers
     {
         public static CloudQueue GetAzureQueue(string name)
         {
-            //var connectionString = AmbientConnectionStringProvider.Instance.GetConnectionString(ConnectionStringNames.Storage);
             var connectionString = Environment.GetEnvironmentVariable("AzureConnectionString");
             var storageAccount = CloudStorageAccount.Parse(connectionString);
             var queueClient = storageAccount.CreateCloudQueueClient();
@@ -25,7 +22,6 @@ namespace FunctionApp1.Helpers
 
         public static CloudTable GetAzureTable(string name)
         {
-            //var connectionString = AmbientConnectionStringProvider.Instance.GetConnectionString(ConnectionStringNames.Storage);
             var connectionString = Environment.GetEnvironmentVariable("AzureConnectionString");
             var storageAccount = CloudStorageAccount.Parse(connectionString);
             var tableClient = storageAccount.CreateCloudTableClient();
@@ -55,6 +51,7 @@ namespace FunctionApp1.Helpers
             var table = GetAzureTable(Constants.AzureTable.IndeedJobs);
             TableOperation tableOperation = TableOperation.Retrieve<BlobRecord>(id, id);
             TableResult tableResult = table.Execute(tableOperation);
+
             return tableResult.Result as BlobRecord;
         }
 
@@ -63,6 +60,7 @@ namespace FunctionApp1.Helpers
             var table = GetAzureTable(Constants.AzureTable.IndeedJobs);
             var query = new TableQuery<BlobRecord>();
             var tableResult = table.ExecuteQuery(query);
+
             return tableResult;
         }
 

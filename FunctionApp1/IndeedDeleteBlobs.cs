@@ -32,15 +32,20 @@ namespace FunctionApp1
             };
 
             var deleteEntity = service.Retrieve(EntityName.ColdLeads, new Guid(entityId), coldLeadsColumns);
+            var deleteId = deleteEntity[ColdLead.ExternalId].ToString();
+            log.LogInformation($"Pulled record with external id: {deleteId}");
 
             var records = AzureHelper.GetRecordsFromTable();
 
-            var deleteId = deleteEntity[ColdLead.ExternalId].ToString();
             if (records.Any(x => x.Id == deleteId))
+            {
                 AzureHelper.DeleteRecordFromTable(deleteId);
+            }
             else
-                log.LogInformation($"Can not find a record with id {deleteId}");
-
+            {
+                log.LogWarning($"Not found a record with id {deleteId}");
+            }
+                
             return req.CreateResponse(HttpStatusCode.OK);
         }
     }

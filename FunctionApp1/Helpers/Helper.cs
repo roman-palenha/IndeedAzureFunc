@@ -1,6 +1,5 @@
 ﻿using FunctionApp1.Constants;
 using FunctionApp1.Models;
-using Microsoft.Crm.Sdk.Messages;
 using Microsoft.Extensions.Logging;
 using Microsoft.Xrm.Sdk;
 using Microsoft.Xrm.Sdk.Messages;
@@ -21,12 +20,13 @@ namespace FunctionApp1.Helpers
 
             if (service != null)
             {
-                log.LogInformation("Connection Established Successfully...");
+                log.LogInformation("Succesfully connected to Dynamics 365");
             }
             else
             {
-                log.LogInformation("Failed to Established Connection!!!");
+                log.LogError("Failed to connect to Dynamic 365");
             }
+
             return service;
         }
 

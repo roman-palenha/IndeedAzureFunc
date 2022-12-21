@@ -32,6 +32,7 @@ namespace FunctionApp1
 
                 var vacancies = await searchJobService.SendRequestAsync(uri, apiConfiguration);
                 var details = new List<IndeedJobDetails>();
+                log.LogInformation($"Pulled {vacancies.Count()} vacancies from Indeed");
 
                 foreach(var v in vacancies)
                 {
@@ -57,6 +58,7 @@ namespace FunctionApp1
                 }
 
                 Helper.BulkCreate(service, details);
+                log.LogInformation($"Created {details.Count} records.");
             }   
         }
 
