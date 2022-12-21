@@ -31,57 +31,6 @@ namespace JobPostingIntegrationFunctions.Helpers
             return service;
         }
 
-        public static string CheckAndReplaceQuery(string query)
-        {
-            var result = query.Replace(" ", "%20");
-            return result;
-        }
-
-        public static OrganizationResponse BulkCreate(IOrganizationService service, IEnumerable<IndeedJobDetails> jobDetails)
-        {
-            ExecuteMultipleRequest request = new ExecuteMultipleRequest()
-            {
-                Settings = new ExecuteMultipleSettings()
-                {
-                    ContinueOnError = false,
-                    ReturnResponses = true
-                },
-                Requests = new OrganizationRequestCollection()
-            };
-
-            foreach (var d in jobDetails)
-            {
-                Entity detailEntity = new Entity(EntityName.ColdLeads);
-                detailEntity[ColdLead.Name] = d.Title;
-                detailEntity[ColdLead.Url] = d.FinalUrl;
-                detailEntity[ColdLead.ExternalId] = d.JobId;
-                detailEntity[ColdLead.Description] = d.Description;
-                detailEntity[ColdLead.CreatedOn] = ParseIndeedCreationDate(d.CreationDate);
-
-                CreateRequest cr = new CreateRequest { Target = detailEntity };
-                request.Requests.Add(cr);
-            }
-
-            var response = service.Execute(request);
-            return response;
-        }
-
-        private static DateTime ParseIndeedCreationDate(string creationDate)
-        {
-            var dateTime = DateTime.Now;
-            if (creationDate == IndeedHitConstants.JustPosted)
-            {
-                return dateTime;
-            }
-            else
-            {
-                var days = int.Parse(creationDate.Split(' ')[0]);
-                dateTime = dateTime.Subtract(TimeSpan.FromDays(days));
-            }
-
-            return dateTime;
-        }
-
         private static string GetConnectionString()
         {
             var conn = Environment.GetEnvironmentVariable("CRMConnectionString");

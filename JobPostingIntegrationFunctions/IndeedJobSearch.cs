@@ -7,6 +7,7 @@ using Microsoft.Azure.WebJobs.Host;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Xrm.Sdk;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -15,87 +16,45 @@ namespace JobPostingIntegrationFunctions
 {
     public static class IndeedJobSearch
     {
+        private static IServiceProvider serviceProvider;
+
         [FunctionName("IndeedJobSearch")]
         public static async Task Run([TimerTrigger("* 0 7 * * 1-5", RunOnStartup = true)] TimerInfo myTimer, ILogger log)
         {
-            IOrganizationService service = Helper.Connection(log);
+            serviceProvider = Startup.ConfigureCRMServices();
+            var service = serviceProvider.GetService<IOrganizationService>();
             if (service != null)
             {
                 var serviceProvider = Startup.ConfigureIndeedServices();
-                var searchJobService = serviceProvider.GetService<ISearchJobService>();
-                var getDetailsService = serviceProvider.GetService<IGetJobDetailsService>();
-                var integrationSettings = IndeedHelper.GetIntegrationSettings(service);
-                if (integrationSettings[IntegrationSettings.NumberOfPages] != null)
+                var indeedJobService = serviceProvider.GetService<IIndeedJobService>();
+
+                var jobs = await indeedJobService.GetJobs();
+                var indeedJobDetails = new List<IndeedJobDetails>();
+                foreach (var job in jobs)
                 {
-                    var pages = int.Parse(integrationSettings[IntegrationSettings.NumberOfPages].ToString());
-                    for (int i = 1; i <= pages; ++i)
+                    var jobDetails = await indeedJobService.GetJobDetails(job.Id);
+                    if (jobDetails.CreationDate != IndeedHitConstants.More30Days)
                     {
-                        await SearchJobsAsync(service, searchJobService, getDetailsService, log, i);
+                        var indeedBlob = new IndeedBlob
+                        {
+                            Description = jobDetails.Description,
+                            Title = jobDetails.Title,
+                            Url = jobDetails.FinalUrl
+                        };
+                        var hash = indeedBlob.GetHashCode();
+                        var existed = AzureHelper.GetRecordFromTable(job.Id);
+                        if (existed == null)
+                        {
+                            jobDetails.JobId = job.Id;
+                            indeedJobDetails.Add(jobDetails);
+                            AzureHelper.InsertRecordToTable(job.Id, hash.ToString());
+                        }
                     }
                 }
-                else
-                {
-                    await SearchJobsAsync(service, searchJobService, getDetailsService, log);
-                }
+                var response = indeedJobService.CreateCrmJobs(indeedJobDetails);
+                response.CheckFault(log);
+
             }
-        }
-
-        private static async Task SearchJobsAsync(IOrganizationService service, ISearchJobService searchJobService, IGetJobDetailsService getDetailsService, ILogger log, int? page = null)
-        {
-            var uri = GetSearchUri(service, page);
-            var apiConfiguration = IndeedHelper.GetApiConfiguration(service);
-
-            var vacancies = await searchJobService.SendRequestAsync(uri, apiConfiguration);
-            var details = new List<IndeedJobDetails>();
-            log.LogInformation($"Pulled {vacancies.Count()} vacancies from Indeed");
-
-            foreach (var v in vacancies)
-            {
-                uri = GetDetailsUri(service, v.Id);
-                var detail = await getDetailsService.SendRequestAsync(uri, apiConfiguration);
-                if (detail.CreationDate != IndeedHitConstants.More30Days)
-                {
-                    var indeedBlob = new IndeedBlob
-                    {
-                        Description = detail.Description,
-                        Title = detail.Title,
-                        Url = detail.FinalUrl
-                    };
-                    var hash = indeedBlob.GetHashCode();
-                    var existed = AzureHelper.GetRecordFromTable(v.Id);
-                    if (existed == null)
-                    {
-                        detail.JobId = v.Id;
-                        details.Add(detail);
-                        AzureHelper.InsertRecordToTable(v.Id, hash.ToString());
-                    }
-                }
-            }
-
-            var response = Helper.BulkCreate(service, details);
-            response.CheckFault(log);
-        }
-    
-
-        private static string GetSearchUri(IOrganizationService service, int? page)
-        {
-            var integrationSettings = IndeedHelper.GetIntegrationSettings(service);
-            var query = Helper.CheckAndReplaceQuery(integrationSettings[IntegrationSettings.Query].ToString());
-            var uri = JobSearch.Url + JobSearch.Query + $"{query}" + JobSearch.Location + $"{integrationSettings[IntegrationSettings.Location]}";
-
-            if (((OptionSetValue)integrationSettings[IntegrationSettings.Localization]).Value != (int)Localization.DontIncludeLocalization)
-                uri += JobSearch.Locality + $"{integrationSettings.FormattedValues[IntegrationSettings.Localization].ToLower()}";
-            
-            if(page.HasValue)
-                uri += JobSearch.Page + page.Value.ToString();
-
-            return uri;
-        }
-
-        private static string GetDetailsUri(IOrganizationService service, string id)
-        {
-            var uri = JobDetails.Url + id;
-            return uri;
         }
 
         private static void CheckFault(this OrganizationResponse ResponseItemObj, ILogger log)

@@ -18,7 +18,7 @@ namespace JobPostingIntegrationFunctions.Helpers
             return indeedResponse.Hits;
         }
 
-        public static ApiConfiguration GetApiConfiguration(IOrganizationService service)
+        public static IndeedApiConfiguration GetApiConfiguration(IOrganizationService service)
         {
             var configurationName = Environment.GetEnvironmentVariable("ApiConfiguration");
             var configurationColumns = new ColumnSet(ConfigurationSettings.Name, ConfigurationSettings.RequestUrl, ConfigurationSettings.RapidHost, ConfigurationSettings.RapidKey);
@@ -32,7 +32,7 @@ namespace JobPostingIntegrationFunctions.Helpers
                 .Entities
                 .FirstOrDefault(x => x.Attributes[ConfigurationSettings.Name].ToString().Equals(configurationName));
 
-            var apiConfiguration = new ApiConfiguration
+            var apiConfiguration = new IndeedApiConfiguration
             {
                 ApiHost = configuration[ConfigurationSettings.RapidHost].ToString(),
                 ApiKey = configuration[ConfigurationSettings.RapidKey].ToString()

@@ -1,7 +1,6 @@
 using JobPostingIntegrationFunctions.Constants;
 using JobPostingIntegrationFunctions.Helpers;
 using JobPostingIntegrationFunctions.Models;
-using JobPostingIntegrationFunctions.Helpers;
 using Microsoft.Azure.WebJobs;
 using Microsoft.Extensions.Logging;
 using Microsoft.Xrm.Sdk;
