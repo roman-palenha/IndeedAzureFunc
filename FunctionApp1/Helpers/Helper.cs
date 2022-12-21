@@ -83,7 +83,7 @@ namespace FunctionApp1.Helpers
 
         private static string GetConnectionString()
         {
-            var conn = Environment.GetEnvironmentVariable("ConnectionString");
+            var conn = Environment.GetEnvironmentVariable("CRMConnectionString");
             return conn;
         }
     }
