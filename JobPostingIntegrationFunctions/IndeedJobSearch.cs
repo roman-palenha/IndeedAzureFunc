@@ -1,20 +1,15 @@
 using JobPostingIntegrationFunctions.Constants;
 using JobPostingIntegrationFunctions.Helpers;
 using JobPostingIntegrationFunctions.Models;
-using JobPostingIntegrationFunctions.Services;
 using JobPostingIntegrationFunctions.Services.Interfaces;
 using Microsoft.Azure.WebJobs;
 using Microsoft.Azure.WebJobs.Host;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Xrm.Sdk;
-using Microsoft.Xrm.Sdk.Query;
-using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Security.Policy;
 using System.Threading.Tasks;
-using System.Web.Services.Description;
 
 namespace JobPostingIntegrationFunctions
 {
@@ -30,16 +25,24 @@ namespace JobPostingIntegrationFunctions
                 var searchJobService = serviceProvider.GetService<ISearchJobService>();
                 var getDetailsService = serviceProvider.GetService<IGetJobDetailsService>();
                 var integrationSettings = IndeedHelper.GetIntegrationSettings(service);
-                var pages = int.Parse(integrationSettings[IntegrationSettings.NumberOfPages].ToString());
-                for(int i = 1; i <= pages; ++i)
+                if (integrationSettings[IntegrationSettings.NumberOfPages] != null)
                 {
-                    await SearchJobsAsync(service, searchJobService, getDetailsService, log, i);
+                    var pages = int.Parse(integrationSettings[IntegrationSettings.NumberOfPages].ToString());
+                    for (int i = 1; i <= pages; ++i)
+                    {
+                        await SearchJobsAsync(service, searchJobService, getDetailsService, log, i);
+                    }
                 }
+                else
+                {
+                    await SearchJobsAsync(service, searchJobService, getDetailsService, log);
+                }
+                
                
             }
         }
 
-        private static async Task SearchJobsAsync(IOrganizationService service, ISearchJobService searchJobService, IGetJobDetailsService getDetailsService, ILogger log, int page)
+        private static async Task SearchJobsAsync(IOrganizationService service, ISearchJobService searchJobService, IGetJobDetailsService getDetailsService, ILogger log, int? page = null)
         {
             var uri = GetSearchUri(service, page);
             var apiConfiguration = IndeedHelper.GetApiConfiguration(service);
@@ -76,7 +79,7 @@ namespace JobPostingIntegrationFunctions
         }
     
 
-        private static string GetSearchUri(IOrganizationService service, int page)
+        private static string GetSearchUri(IOrganizationService service, int? page)
         {
             var integrationSettings = IndeedHelper.GetIntegrationSettings(service);
             var query = Helper.CheckAndReplaceQuery(integrationSettings[IntegrationSettings.Query].ToString());
@@ -84,8 +87,9 @@ namespace JobPostingIntegrationFunctions
 
             if (((OptionSetValue)integrationSettings[IntegrationSettings.Localization]).Value != (int)Localization.DontIncludeLocalization)
                 uri += JobSearch.Locality + $"{integrationSettings.FormattedValues[IntegrationSettings.Localization].ToLower()}";
-
-            uri += JobSearch.Page + page.ToString();
+            
+            if(page.HasValue)
+                uri += JobSearch.Page + page.Value.ToString();
 
             return uri;
         }
