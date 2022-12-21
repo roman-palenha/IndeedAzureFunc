@@ -37,8 +37,6 @@ namespace JobPostingIntegrationFunctions
                 {
                     await SearchJobsAsync(service, searchJobService, getDetailsService, log);
                 }
-                
-               
             }
         }
 
