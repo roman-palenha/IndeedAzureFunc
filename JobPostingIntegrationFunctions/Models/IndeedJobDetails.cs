@@ -1,6 +1,6 @@
 ﻿using Newtonsoft.Json;
 
-namespace FunctionApp1.Models
+namespace JobPostingIntegrationFunctions.Models
 {
     public class IndeedJobDetails
     {

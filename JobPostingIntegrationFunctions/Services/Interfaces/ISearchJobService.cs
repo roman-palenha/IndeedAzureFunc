@@ -1,11 +1,11 @@
-﻿using FunctionApp1.Models;
+﻿using JobPostingIntegrationFunctions.Models;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
-namespace FunctionApp1.Services.Interfaces
+namespace JobPostingIntegrationFunctions.Services.Interfaces
 {
     public interface ISearchJobService
     {
-       Task<IEnumerable<IndeedHit>> SendRequestAsync(string uri, ApiConfiguration apiConfiguration);
+        Task<IEnumerable<IndeedHit>> SendRequestAsync(string uri, ApiConfiguration apiConfiguration);
     }
 }

@@ -1,4 +1,4 @@
-﻿namespace FunctionApp1.Models
+﻿namespace JobPostingIntegrationFunctions.Models
 {
     public class ApiConfiguration
     {

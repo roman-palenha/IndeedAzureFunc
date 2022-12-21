@@ -1,5 +1,5 @@
-﻿using FunctionApp1.Constants;
-using FunctionApp1.Models;
+﻿using JobPostingIntegrationFunctions.Constants;
+using JobPostingIntegrationFunctions.Models;
 using Microsoft.Xrm.Sdk;
 using Microsoft.Xrm.Sdk.Query;
 using Newtonsoft.Json;
@@ -7,7 +7,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace FunctionApp1.Helpers
+namespace JobPostingIntegrationFunctions.Helpers
 {
     public static class IndeedHelper
     {

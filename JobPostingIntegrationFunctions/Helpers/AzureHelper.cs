@@ -1,11 +1,11 @@
-﻿using FunctionApp1.Models;
+﻿using JobPostingIntegrationFunctions.Models;
 using Microsoft.WindowsAzure.Storage;
 using Microsoft.WindowsAzure.Storage.Queue;
 using Microsoft.WindowsAzure.Storage.Table;
 using System;
 using System.Collections.Generic;
 
-namespace FunctionApp1.Helpers
+namespace JobPostingIntegrationFunctions.Helpers
 {
     public static class AzureHelper
     {

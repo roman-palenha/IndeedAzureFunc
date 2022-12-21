@@ -1,6 +1,6 @@
 ﻿using Microsoft.WindowsAzure.Storage.Table;
 
-namespace FunctionApp1.Models
+namespace JobPostingIntegrationFunctions.Models
 {
     public class BlobRecord : TableEntity
     {
@@ -9,12 +9,12 @@ namespace FunctionApp1.Models
 
         public void AssignRowKey()
         {
-            this.RowKey = Id.ToString();
+            RowKey = Id.ToString();
         }
 
         public void AssignPartitionKey()
         {
-            this.PartitionKey = Id.ToString();
+            PartitionKey = Id.ToString();
         }
     }
 }

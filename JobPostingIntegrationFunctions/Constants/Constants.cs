@@ -1,4 +1,4 @@
-﻿namespace FunctionApp1.Constants
+﻿namespace JobPostingIntegrationFunctions.Constants
 {
     public static class EntityName
     {

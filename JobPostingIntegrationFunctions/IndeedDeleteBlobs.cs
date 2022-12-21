@@ -1,6 +1,6 @@
-using FunctionApp1.Constants;
-using FunctionApp1.Helpers;
-using FunctionApp1.Models;
+using JobPostingIntegrationFunctions.Constants;
+using JobPostingIntegrationFunctions.Helpers;
+using JobPostingIntegrationFunctions.Models;
 using Microsoft.Azure.WebJobs;
 using Microsoft.Extensions.Logging;
 using Microsoft.Xrm.Sdk;
@@ -12,7 +12,7 @@ using System.Net;
 using System.Net.Http;
 using System.Threading.Tasks;
 
-namespace FunctionApp1
+namespace JobPostingIntegrationFunctions
 {
     public static class IndeedDeleteBlobs
     {
@@ -20,9 +20,9 @@ namespace FunctionApp1
         public static async Task<object> Run([HttpTrigger(WebHookType = "genericJson")] HttpRequestMessage req, ILogger log)
         {
             var jsonContent = await req.Content.ReadAsStringAsync();
-           
+
             var service = Helper.Connection(log);
-            if(service == null)
+            if (service == null)
             {
                 return req.CreateResponse(HttpStatusCode.Unauthorized);
             }
@@ -38,7 +38,7 @@ namespace FunctionApp1
             {
                 log.LogWarning($"Not found a record with id {deleteId}");
             }
-                
+
             return req.CreateResponse(HttpStatusCode.OK);
         }
 

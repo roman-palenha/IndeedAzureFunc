@@ -1,5 +1,5 @@
-﻿using FunctionApp1.Constants;
-using FunctionApp1.Models;
+﻿using JobPostingIntegrationFunctions.Constants;
+using JobPostingIntegrationFunctions.Models;
 using Microsoft.Extensions.Logging;
 using Microsoft.Xrm.Sdk;
 using Microsoft.Xrm.Sdk.Messages;
@@ -7,7 +7,7 @@ using Microsoft.Xrm.Tooling.Connector;
 using System;
 using System.Collections.Generic;
 
-namespace FunctionApp1.Helpers
+namespace JobPostingIntegrationFunctions.Helpers
 {
     public static class Helper
     {
@@ -62,7 +62,7 @@ namespace FunctionApp1.Helpers
                 request.Requests.Add(cr);
             }
 
-           var response =  service.Execute(request);
+            var response = service.Execute(request);
             return response;
         }
 
@@ -78,7 +78,7 @@ namespace FunctionApp1.Helpers
                 var days = int.Parse(creationDate.Split(' ')[0]);
                 dateTime = dateTime.Subtract(TimeSpan.FromDays(days));
             }
-        
+
             return dateTime;
         }
 
