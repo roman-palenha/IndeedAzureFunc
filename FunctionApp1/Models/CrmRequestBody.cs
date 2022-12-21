@@ -7,9 +7,7 @@ using System.Threading.Tasks;
 
 namespace FunctionApp1.Models
 {
-    // Root myDeserializedClass = JsonConvert.DeserializeObject<Root>(myJsonResponse);
-    // Root myDeserializedClass = JsonConvert.DeserializeObject<Root>(myJsonResponse);
-    public class Root
+    public class CrmRequestBody
     {
         [JsonProperty("BusinessUnitId")]
         public string BusinessUnitId { get; set; }
@@ -68,8 +66,4 @@ namespace FunctionApp1.Models
         [JsonProperty("SecondaryEntityName")]
         public string SecondaryEntityName { get; set; }
     }
-
-
-
-
 }

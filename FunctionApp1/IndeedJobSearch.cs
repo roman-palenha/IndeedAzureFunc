@@ -18,7 +18,7 @@ namespace FunctionApp1
     public static class IndeedJobSearch
     {
         [FunctionName("IndeedJobSearch")]
-        public static async Task Run([TimerTrigger("* 0 7 * * 1-5" , RunOnStartup=true)]TimerInfo myTimer, ILogger log)
+        public static async Task Run([TimerTrigger("* 0 7 * * 1-5" , RunOnStartup=false)]TimerInfo myTimer, ILogger log)
         {
             IOrganizationService service = Helper.Connection(log);
             if (service != null)

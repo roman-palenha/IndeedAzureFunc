@@ -20,15 +20,12 @@ namespace FunctionApp1
     public static class IndeedDeleteBlobs
     {
         [FunctionName("IndeedDeleteBlobs")]
-        public static async Task<object> Run([HttpTrigger(WebHookType = "genericJson")]HttpRequestMessage req, ILogger log)
+        public static async Task<object> Run([HttpTrigger(WebHookType = "genericJson")] HttpRequestMessage req, ILogger log)
         {
+            var jsonContent = await req.Content.ReadAsStringAsync();
+            var content = JsonConvert.DeserializeObject<CrmRequestBody>(jsonContent);
 
-            var content = await req.Content.ReadAsStringAsync();
-            var myDeserializedClass = JsonConvert.DeserializeObject<Root>(content);
-
-            var id = myDeserializedClass.PrimaryEntityId;
-
-            log.LogInformation($"{id}");
+            var entityId = content.PrimaryEntityId;
 
             var service = Helper.Connection(log);
             var coldLeadsColumns = new ColumnSet(ColdLead.Name, ColdLead.Url, ColdLead.Description, ColdLead.ExternalId, ColdLead.CreatedOn);
@@ -38,24 +35,15 @@ namespace FunctionApp1
                 ColumnSet = coldLeadsColumns
             };
 
-            var coldLeads = service.RetrieveMultiple(expr)
-                .Entities;
-            try
-            {
-                var records = AzureHelper.GetRecordsFromTable();
+            var deleteEntity = service.Retrieve(EntityName.ColdLeads, new Guid(entityId), coldLeadsColumns);
 
-                foreach (var r in records)
-                {
-                    if (!coldLeads.Any(x => x[ColdLead.ExternalId].ToString() == r.Id))
-                        AzureHelper.DeleteRecordFromTable(r.Id);
-                }
-            }
-            catch(Exception ex)
-            {
-                log.LogError(ex.Message);
-            }
-            
-           
+            var records = AzureHelper.GetRecordsFromTable();
+
+            var deleteId = deleteEntity[ColdLead.ExternalId].ToString();
+            if (records.Any(x => x.Id == deleteId))
+                AzureHelper.DeleteRecordFromTable(deleteId);
+            else
+                log.LogInformation($"Can not find a record with id {deleteId}");
 
             return req.CreateResponse(HttpStatusCode.OK);
         }
