@@ -1,19 +1,15 @@
+using FunctionApp1.Constants;
+using FunctionApp1.Helpers;
+using FunctionApp1.Models;
+using Microsoft.Azure.WebJobs;
+using Microsoft.Extensions.Logging;
+using Microsoft.Xrm.Sdk.Query;
+using Newtonsoft.Json;
 using System;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Threading.Tasks;
-using System.Web.Services.Description;
-using FunctionApp1.Constants;
-using FunctionApp1.Helpers;
-using FunctionApp1.Models;
-using Microsoft.Azure.WebJobs;
-using Microsoft.Azure.WebJobs.Host;
-using Microsoft.Extensions.Logging;
-using Microsoft.Xrm.Sdk;
-using Microsoft.Xrm.Sdk.Query;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
 
 namespace FunctionApp1
 {

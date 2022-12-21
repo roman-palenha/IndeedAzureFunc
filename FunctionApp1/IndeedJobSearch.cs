@@ -88,15 +88,5 @@ namespace FunctionApp1
             var uri = JobDetails.Url + id;
             return uri;
         }
-
-        private static void CreateVacancies(IOrganizationService service, IEnumerable<IndeedHit> vacancies)
-        {
-            foreach (var v in vacancies)
-            {
-                var vacancyEntity = new Entity(EntityName.ColdLeads);
-                vacancyEntity[ColdLead.Name] = v.Title;
-                service.Create(vacancyEntity);
-            }
-        }
     }
 }
