@@ -2,7 +2,6 @@ using JobPostingIntegrationFunctions.Constants;
 using JobPostingIntegrationFunctions.Helpers;
 using JobPostingIntegrationFunctions.Models;
 using JobPostingIntegrationFunctions.Services.Interfaces;
-using JobPostingIntegrationFunctions.Helpers;
 using Microsoft.Azure.WebJobs;
 using Microsoft.Azure.WebJobs.Host;
 using Microsoft.Extensions.DependencyInjection;
