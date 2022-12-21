@@ -5,6 +5,7 @@ using Microsoft.WindowsAzure.Storage;
 using Microsoft.WindowsAzure.Storage.Queue;
 using Microsoft.WindowsAzure.Storage.Table;
 using System;
+using System.Collections.Generic;
 
 namespace FunctionApp1.Helpers
 {
@@ -55,6 +56,22 @@ namespace FunctionApp1.Helpers
             TableOperation tableOperation = TableOperation.Retrieve<BlobRecord>(id, id);
             TableResult tableResult = table.Execute(tableOperation);
             return tableResult.Result as BlobRecord;
+        }
+
+        public static IEnumerable<BlobRecord> GetRecordsFromTable()
+        {
+            var table = GetAzureTable(Constants.AzureTable.IndeedJobs);
+            var query = new TableQuery<BlobRecord>();
+            var tableResult = table.ExecuteQuery(query);
+            return tableResult;
+        }
+
+        public static void DeleteRecordFromTable(string id)
+        {
+            var table = GetAzureTable(Constants.AzureTable.IndeedJobs);
+            var record = GetRecordFromTable(id);
+            TableOperation tableOperation = TableOperation.Delete(record);
+            TableResult tableResult = table.Execute(tableOperation);
         }
     }
 }
