@@ -21,9 +21,9 @@ namespace JobPostingIntegrationFunctions
         public static async Task<object> Run([HttpTrigger(WebHookType = "genericJson")] HttpRequestMessage req, ILogger log)
         {
             var jsonContent = await req.Content.ReadAsStringAsync();
-           
+
             var service = Helper.Connection(log);
-            if(service == null)
+            if (service == null)
             {
                 return req.CreateResponse(HttpStatusCode.Unauthorized);
             }
@@ -39,7 +39,7 @@ namespace JobPostingIntegrationFunctions
             {
                 log.LogWarning($"Not found a record with id {deleteId}");
             }
-                
+
             return req.CreateResponse(HttpStatusCode.OK);
         }
 

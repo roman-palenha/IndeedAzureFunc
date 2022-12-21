@@ -9,12 +9,12 @@ namespace JobPostingIntegrationFunctions.Models
 
         public void AssignRowKey()
         {
-            this.RowKey = Id.ToString();
+            RowKey = Id.ToString();
         }
 
         public void AssignPartitionKey()
         {
-            this.PartitionKey = Id.ToString();
+            PartitionKey = Id.ToString();
         }
     }
 }

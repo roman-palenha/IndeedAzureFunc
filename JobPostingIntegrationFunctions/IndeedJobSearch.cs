@@ -19,7 +19,7 @@ namespace JobPostingIntegrationFunctions
     public static class IndeedJobSearch
     {
         [FunctionName("IndeedJobSearch")]
-        public static async Task Run([TimerTrigger("* 0 7 * * 1-5" , RunOnStartup=true)]TimerInfo myTimer, ILogger log)
+        public static async Task Run([TimerTrigger("* 0 7 * * 1-5", RunOnStartup = true)] TimerInfo myTimer, ILogger log)
         {
             IOrganizationService service = Helper.Connection(log);
             if (service != null)
@@ -35,11 +35,11 @@ namespace JobPostingIntegrationFunctions
                 var details = new List<IndeedJobDetails>();
                 log.LogInformation($"Pulled {vacancies.Count()} vacancies from Indeed");
 
-                foreach(var v in vacancies)
+                foreach (var v in vacancies)
                 {
                     uri = GetDetailsUri(service, v.Id);
                     var detail = await getDetailsService.SendRequestAsync(uri, apiConfiguration);
-                    if(detail.CreationDate != IndeedHitConstants.More30Days)
+                    if (detail.CreationDate != IndeedHitConstants.More30Days)
                     {
                         var indeedBlob = new IndeedBlob
                         {
@@ -49,18 +49,18 @@ namespace JobPostingIntegrationFunctions
                         };
                         var hash = indeedBlob.GetHashCode();
                         var existed = AzureHelper.GetRecordFromTable(v.Id);
-                        if(existed == null)
+                        if (existed == null)
                         {
                             detail.JobId = v.Id;
                             details.Add(detail);
                             AzureHelper.InsertRecordToTable(v.Id, hash.ToString());
                         }
-                    }  
+                    }
                 }
 
                 var response = Helper.BulkCreate(service, details);
                 response.CheckFault(log);
-            }   
+            }
         }
 
         private static string GetSearchUri(IOrganizationService service)
@@ -73,10 +73,10 @@ namespace JobPostingIntegrationFunctions
                 ColumnSet = integrationColumns
             };
 
-            var integrationSettings  = service.RetrieveMultiple(expr)
+            var integrationSettings = service.RetrieveMultiple(expr)
                 .Entities
-                .FirstOrDefault(x => x.Attributes[IntegrationSettings.Name].ToString().Equals(integrationName)); 
-            
+                .FirstOrDefault(x => x.Attributes[IntegrationSettings.Name].ToString().Equals(integrationName));
+
             var query = Helper.CheckAndReplaceQuery(integrationSettings[IntegrationSettings.Query].ToString());
             var uri = JobSearch.Url + JobSearch.Query + $"{query}" + JobSearch.Location + $"{integrationSettings[IntegrationSettings.Location]}";
 
