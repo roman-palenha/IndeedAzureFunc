@@ -50,6 +50,9 @@ namespace JobPostingIntegrationFunctions.Services
                 .Entities
                 .FirstOrDefault();
 
+            if (configuration == null || configuration[ConfigurationSettings.RapidHost] == null || configuration[ConfigurationSettings.RapidKey] == null)
+                throw new NullReferenceException("Configuration is null.");
+
             var apiConfiguration = new IndeedApiConfiguration
             {
                 ApiHost = configuration[ConfigurationSettings.RapidHost].ToString(),
@@ -120,11 +123,16 @@ namespace JobPostingIntegrationFunctions.Services
 
         public string GetColdLeadExternalId(string jsonContent)
         {
+            if (jsonContent == null)
+                throw new ArgumentNullException(nameof(jsonContent));
+
             var entityId = DeserializeCrmRequestBody(jsonContent);
             var coldLeadsColumn = new ColumnSet(ColdLead.ExternalId);
             var deleteEntity = service.Retrieve(EntityName.ColdLeads, new Guid(entityId), coldLeadsColumn);
-            var deleteId = deleteEntity[ColdLead.ExternalId].ToString();
+            if (deleteEntity == null)
+                throw new NullReferenceException($"Entity with id {entityId} is not found.");
 
+            var deleteId = deleteEntity[ColdLead.ExternalId].ToString();
             return deleteId;
         }
 
