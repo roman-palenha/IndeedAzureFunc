@@ -6,6 +6,8 @@ using Microsoft.Azure.WebJobs.Host;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Xrm.Sdk;
+using System;
+using System.Activities.Statements;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
@@ -17,42 +19,47 @@ namespace JobPostingIntegrationFunctions
         [FunctionName("IndeedJobSearch")]
         public static async Task Run([TimerTrigger("* 0 7 * * 1-5", RunOnStartup = false)] TimerInfo myTimer, ILogger log)
         {
-            var serviceProvider = Startup.ConfigureCRMServices(); 
-            var service = serviceProvider.GetService<IOrganizationService>();
-            if (service != null)
+            try
             {
-                serviceProvider = Startup.ConfigureIndeedServices(service);
-                var indeedJobService = serviceProvider.GetService<IIndeedJobService>();
-
-                serviceProvider = Startup.ConfigureAzureServices();
-                var blobStorageService = serviceProvider.GetService<IBlobStorageService>();
-
-                var jobs = await indeedJobService.GetJobs();
-                var indeedJobDetails = new List<IndeedJobDetails>();
-                foreach (var job in jobs)
+                var serviceProvider = Startup.ConfigureCRMServices();
+                var service = serviceProvider.GetService<IOrganizationService>();
+                if (service != null)
                 {
-                    var jobDetails = await indeedJobService.GetJobDetails(job.Id);
-                    if (jobDetails.CreationDate != IndeedHitConstants.More30Days)
+                    serviceProvider = Startup.ConfigureIndeedServices(service);
+                    var indeedJobService = serviceProvider.GetService<IIndeedJobService>();
+
+                    serviceProvider = Startup.ConfigureAzureServices();
+                    var blobStorageService = serviceProvider.GetService<IBlobStorageService>();
+
+                    var jobs = await indeedJobService.GetJobs();
+                    var indeedJobDetails = new List<IndeedJobDetails>();
+                    foreach (var job in jobs)
                     {
-                        var indeedBlob = new IndeedBlob
+                        var jobDetails = await indeedJobService.GetJobDetails(job.Id);
+                        if (jobDetails.CreationDate != IndeedHitConstants.More30Days)
                         {
-                            Description = jobDetails.Description,
-                            Title = jobDetails.Title,
-                            Url = jobDetails.FinalUrl
-                        };
-                        var hash = indeedBlob.GetHashCode();
-                        var existed = blobStorageService.GetRecordFromTable(job.Id);
-                        if (existed == null)
-                        {
-                            jobDetails.JobId = job.Id;
-                            indeedJobDetails.Add(jobDetails);
-                            blobStorageService.InsertRecordToTable(job.Id, hash.ToString());
+                            var indeedBlob = new IndeedBlob
+                            {
+                                Description = jobDetails.Description,
+                                Title = jobDetails.Title,
+                                Url = jobDetails.FinalUrl
+                            };
+                            var hash = indeedBlob.GetHashCode();
+                            var existed = blobStorageService.GetRecordFromTable(job.Id);
+                            if (existed == null)
+                            {
+                                jobDetails.JobId = job.Id;
+                                indeedJobDetails.Add(jobDetails);
+                                blobStorageService.InsertRecordToTable(job.Id, hash.ToString());
+                            }
                         }
                     }
-                }
-                var response = indeedJobService.CreateCrmJobs(indeedJobDetails);
-                response.CheckFault(log);
-
+                    var response = indeedJobService.CreateCrmJobs(indeedJobDetails);
+                    response.CheckFault(log);
+                } 
+            } catch(Exception ex)
+            {
+                log.LogError(ex.Message);
             }
         }
 

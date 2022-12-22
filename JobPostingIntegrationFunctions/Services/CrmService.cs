@@ -17,7 +17,7 @@ namespace JobPostingIntegrationFunctions.Services
 
         public CrmService(IOrganizationService service)
         {
-            this.service = service;
+            this.service = service ?? throw new ArgumentNullException(nameof(service));
         }
 
         public IndeedApiConfiguration GetApiConfiguration()
@@ -93,16 +93,21 @@ namespace JobPostingIntegrationFunctions.Services
 
         public string GetColdLeadExternalId(string jsonContent)
         {
-            var content = JsonConvert.DeserializeObject<CrmRequestBody>(jsonContent);
-            var entityId = content.PrimaryEntityId;
-
-            var coldLeadsColumns = new ColumnSet(ColdLead.Name, ColdLead.Url, ColdLead.Description, ColdLead.ExternalId, ColdLead.CreatedOn);
-            var deleteEntity = service.Retrieve(EntityName.ColdLeads, new Guid(entityId), coldLeadsColumns);
+            var entityId = DeserializeCrmRequestBody(jsonContent);
+            var coldLeadsColumn = new ColumnSet(ColdLead.ExternalId);
+            var deleteEntity = service.Retrieve(EntityName.ColdLeads, new Guid(entityId), coldLeadsColumn);
             var deleteId = deleteEntity[ColdLead.ExternalId].ToString();
 
             return deleteId;
         }
 
+        private static string DeserializeCrmRequestBody(string jsonContent)
+        {
+            var content = JsonConvert.DeserializeObject<CrmRequestBody>(jsonContent);
+            var entityId = content.PrimaryEntityId;
+
+            return entityId;
+        }
         private static DateTime ParseIndeedCreationDate(string creationDate)
         {
             var dateTime = DateTime.Now;

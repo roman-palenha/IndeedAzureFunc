@@ -1,4 +1,5 @@
-﻿using JobPostingIntegrationFunctions.Models;
+﻿using JobPostingIntegrationFunctions.Constants;
+using JobPostingIntegrationFunctions.Models;
 using JobPostingIntegrationFunctions.Services;
 using JobPostingIntegrationFunctions.Services.Interfaces;
 using Microsoft.Extensions.DependencyInjection;
@@ -28,7 +29,7 @@ namespace JobPostingIntegrationFunctions
             var services = new ServiceCollection()
                 .AddSingleton(s =>
                 {
-                    CrmServiceClient conn = new CrmServiceClient(ConfigurationManager.AppSettings["CRMConnectionString"]);
+                    CrmServiceClient conn = new CrmServiceClient(ConfigurationManager.AppSettings[ConnectionStrings.CRMConnectionString]);
                     return conn.OrganizationWebProxyClient ?? (IOrganizationService)conn.OrganizationServiceProxy;
                 });
 
@@ -40,7 +41,7 @@ namespace JobPostingIntegrationFunctions
             var services = new ServiceCollection()
                 .AddScoped<IBlobStorageService>(s =>
                 {
-                    return new BlobStorageService(ConfigurationManager.AppSettings["AzureConnectionString"]);
+                    return new BlobStorageService(ConfigurationManager.AppSettings[ConnectionStrings.AzureConnectionString]);
                 });
 
             return services.BuildServiceProvider();

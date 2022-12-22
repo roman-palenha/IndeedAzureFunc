@@ -18,7 +18,7 @@ namespace JobPostingIntegrationFunctions.Services
         public IndeedJobService(ICrmService crmService, IHttpRequestService httpRequestService)
         {
             this.crmService = crmService ?? throw new ArgumentNullException(nameof(crmService));
-            this.httpRequestService = httpRequestService;
+            this.httpRequestService = httpRequestService ?? throw new ArgumentNullException(nameof(crmService));
             this.apiConfiguration = GetApiConfiguration();
         }
 
@@ -89,6 +89,7 @@ namespace JobPostingIntegrationFunctions.Services
 
             if (((OptionSetValue)item[IntegrationSettings.Localization]).Value != (int)Localization.DontIncludeLocalization)
                 uri += JobSearch.Locality + $"{item.FormattedValues[IntegrationSettings.Localization].ToLower()}";
+
             return uri;
         }
     }

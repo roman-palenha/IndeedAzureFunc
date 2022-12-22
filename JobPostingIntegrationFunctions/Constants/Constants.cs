@@ -1,4 +1,6 @@
-﻿namespace JobPostingIntegrationFunctions.Constants
+﻿using System.CodeDom;
+
+namespace JobPostingIntegrationFunctions.Constants
 {
     public static class EntityName
     {
@@ -65,4 +67,10 @@
     {
         public const string IndeedJobs = "IndeedJobs";
     }
+
+    public static class ConnectionStrings
+    {
+        public const string CRMConnectionString = "CRMConnectionString";
+        public const string AzureConnectionString = "AzureConnectionString";
+    } 
 }

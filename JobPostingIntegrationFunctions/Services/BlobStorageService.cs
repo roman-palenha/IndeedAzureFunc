@@ -1,13 +1,9 @@
 ﻿using JobPostingIntegrationFunctions.Models;
 using JobPostingIntegrationFunctions.Services.Interfaces;
+using Microsoft.WindowsAzure.Storage;
 using Microsoft.WindowsAzure.Storage.Queue;
 using Microsoft.WindowsAzure.Storage.Table;
-using Microsoft.WindowsAzure.Storage;
-using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace JobPostingIntegrationFunctions.Services
 {
