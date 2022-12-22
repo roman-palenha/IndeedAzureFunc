@@ -28,12 +28,27 @@ namespace JobPostingIntegrationFunctions.Services
             {
                 EntityName = EntityName.ConfigurationSettings,
                 ColumnSet = configurationColumns,
-                TopCount = 1
+                TopCount = 1,
+                Criteria =
+                {
+                    Conditions =
+                    {
+                        new ConditionExpression()
+                        {
+                            AttributeName = ConfigurationSettings.Name,
+                            Operator = ConditionOperator.Equal,
+                            Values =
+                            {
+                                configurationName
+                            }
+                        }
+                    }
+                }
             };
 
             var configuration = service.RetrieveMultiple(expr)
                 .Entities
-                .FirstOrDefault(x => x.Attributes[ConfigurationSettings.Name].ToString().Equals(configurationName, StringComparison.InvariantCultureIgnoreCase));
+                .FirstOrDefault();
 
             var apiConfiguration = new IndeedApiConfiguration
             {
