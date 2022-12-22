@@ -36,7 +36,7 @@ namespace JobPostingIntegrationFunctions.Services
             {
                 var numberOfPages = item.GetAttributeValue<int>(IntegrationSettings.NumberOfPages);
 
-                for (int i = 1; i < numberOfPages; i++)
+                for (int i = 1; i <= numberOfPages; i++)
                 {
                     var uri = CreateUri(item);
                     uri += JobSearch.Page + i.ToString();
@@ -53,6 +53,11 @@ namespace JobPostingIntegrationFunctions.Services
         public OrganizationResponse CreateCrmJobs(IEnumerable<IndeedJobDetails> jobDetails)
         {
             return crmService.BulkCreate(jobDetails);
+        }
+
+        public string GetColdLeadExternalId(string jsonContent)
+        {
+            return crmService.GetColdLeadExternalId(jsonContent);
         }
 
         private IndeedApiConfiguration GetApiConfiguration()
@@ -86,7 +91,5 @@ namespace JobPostingIntegrationFunctions.Services
                 uri += JobSearch.Locality + $"{item.FormattedValues[IntegrationSettings.Localization].ToLower()}";
             return uri;
         }
-
-
     }
 }

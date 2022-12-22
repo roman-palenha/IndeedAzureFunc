@@ -58,6 +58,7 @@
     {
         public const string More30Days = "30+ days ago";
         public const string JustPosted = "Just Posted";
+        public const string Today = "Today";
     }
 
     public static class AzureTable

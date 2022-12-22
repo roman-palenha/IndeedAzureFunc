@@ -42,4 +42,10 @@
         ZA = 124210037,
         DontIncludeLocalization = 124210038
     }
+
+    public enum JobPortal
+    {
+        Indeed = 124210000,
+        Linkedin = 124210001
+    }
 }

@@ -10,5 +10,6 @@ namespace JobPostingIntegrationFunctions.Services.Interfaces
         Task<IndeedJobDetails> GetJobDetails(string id);
         Task<IEnumerable<IndeedHit>> GetJobs();
         OrganizationResponse CreateCrmJobs(IEnumerable<IndeedJobDetails> jobDetails);
+        string GetColdLeadExternalId(string jsonContent);
     }
 }

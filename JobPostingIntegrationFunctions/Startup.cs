@@ -11,11 +11,14 @@ namespace JobPostingIntegrationFunctions
 {
     public static class Startup
     {
-        public static IServiceProvider ConfigureIndeedServices()
+        public static IServiceProvider ConfigureIndeedServices(IOrganizationService organizationService)
         {
             var services = new ServiceCollection()
                 .AddSingleton<IIndeedApiConfiguration, IndeedApiConfiguration>()
-                .AddScoped<IIndeedJobService, IndeedJobService>();
+                .AddScoped<IHttpRequestService, HttpRequestService>();
+
+            services.AddScoped<IIndeedJobService>(s => 
+                ActivatorUtilities.CreateInstance<IndeedJobService>(s, new CrmService(organizationService), s.GetService<IHttpRequestService>()));
 
             return services.BuildServiceProvider();
         }
@@ -26,18 +29,18 @@ namespace JobPostingIntegrationFunctions
                 .AddSingleton(s =>
                 {
                     CrmServiceClient conn = new CrmServiceClient(ConfigurationManager.AppSettings["CRMConnectionString"]);
-                    return (IOrganizationService)conn.OrganizationServiceProxy;
+                    return conn.OrganizationWebProxyClient ?? (IOrganizationService)conn.OrganizationServiceProxy;
                 });
 
             return services.BuildServiceProvider();
         }
 
-        public static IServiceProvider ConfigureIndeedServices(IOrganizationService organizationService)
+        public static IServiceProvider ConfigureAzureServices()
         {
             var services = new ServiceCollection()
-                .AddScoped(s =>
+                .AddScoped<IBlobStorageService>(s =>
                 {
-                    return new CrmService(organizationService);
+                    return new BlobStorageService(ConfigurationManager.AppSettings["AzureConnectionString"]);
                 });
 
             return services.BuildServiceProvider();

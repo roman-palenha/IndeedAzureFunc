@@ -6,7 +6,7 @@ namespace JobPostingIntegrationFunctions.Models
     public class IndeedResponse
     {
         [JsonProperty("count")]
-        public int Count { get; set; }
+        public int? Count { get; set; }
         [JsonProperty("hits")]
         public List<IndeedHit> Hits { get; set; }
         [JsonProperty("indeed_final_url")]

@@ -1,7 +1,9 @@
 using JobPostingIntegrationFunctions.Constants;
 using JobPostingIntegrationFunctions.Helpers;
 using JobPostingIntegrationFunctions.Models;
+using JobPostingIntegrationFunctions.Services.Interfaces;
 using Microsoft.Azure.WebJobs;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Xrm.Sdk;
 using Microsoft.Xrm.Sdk.Query;
@@ -17,42 +19,27 @@ namespace JobPostingIntegrationFunctions
     public static class IndeedDeleteBlobs
     {
         [FunctionName("IndeedDeleteBlobs")]
-        public static async Task<object> Run([HttpTrigger(WebHookType = "genericJson")] HttpRequestMessage req, ILogger log)
+        public static async Task Run([HttpTrigger(WebHookType = "genericJson")] HttpRequestMessage req, ILogger log)
         {
-            var jsonContent = await req.Content.ReadAsStringAsync();
-
-            var service = Helper.Connection(log);
-            if (service == null)
+            var serviceProvider = Startup.ConfigureCRMServices();
+            var service = serviceProvider.GetService<IOrganizationService>();
+            if (service != null)
             {
-                return req.CreateResponse(HttpStatusCode.Unauthorized);
+                serviceProvider = Startup.ConfigureIndeedServices(service);
+                var indeedJobService = serviceProvider.GetService<IIndeedJobService>();
+
+                var jsonContent = await req.Content.ReadAsStringAsync();
+                var deleteId = indeedJobService.GetColdLeadExternalId(jsonContent);
+
+                serviceProvider = Startup.ConfigureAzureServices();
+                var blobStorageService = serviceProvider.GetService<IBlobStorageService>();
+
+                var records = blobStorageService.GetRecordsFromTable();
+                if (records.Any(x => x.Id == deleteId))
+                {
+                    blobStorageService.DeleteRecordFromTable(deleteId);
+                }
             }
-
-            var deleteId = GetColdLeadExternalId(service, jsonContent, log);
-            var records = AzureHelper.GetRecordsFromTable();
-
-            if (records.Any(x => x.Id == deleteId))
-            {
-                AzureHelper.DeleteRecordFromTable(deleteId);
-            }
-            else
-            {
-                log.LogWarning($"Not found a record with id {deleteId}");
-            }
-
-            return req.CreateResponse(HttpStatusCode.OK);
-        }
-
-        private static string GetColdLeadExternalId(IOrganizationService service, string body, ILogger log)
-        {
-            var content = JsonConvert.DeserializeObject<CrmRequestBody>(body);
-            var entityId = content.PrimaryEntityId;
-
-            var coldLeadsColumns = new ColumnSet(ColdLead.Name, ColdLead.Url, ColdLead.Description, ColdLead.ExternalId, ColdLead.CreatedOn);
-            var deleteEntity = service.Retrieve(EntityName.ColdLeads, new Guid(entityId), coldLeadsColumns);
-            var deleteId = deleteEntity[ColdLead.ExternalId].ToString();
-            log.LogInformation($"Pulled record with external id: {deleteId}");
-
-            return deleteId;
         }
     }
 }

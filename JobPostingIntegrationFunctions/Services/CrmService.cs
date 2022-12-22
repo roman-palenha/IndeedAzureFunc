@@ -4,6 +4,7 @@ using JobPostingIntegrationFunctions.Services.Interfaces;
 using Microsoft.Xrm.Sdk;
 using Microsoft.Xrm.Sdk.Messages;
 using Microsoft.Xrm.Sdk.Query;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -50,12 +51,13 @@ namespace JobPostingIntegrationFunctions.Services
             {
                 EntityName = EntityName.IntegrationSettings,
                 ColumnSet = integrationColumns,
-                //TODO
-                //Criteria = where JobsPortal == Indeed 
             };
 
-            var integrationSettings = service.RetrieveMultiple(expr)
-                .Entities.ToList();
+            var integrationSettings = service
+                .RetrieveMultiple(expr)
+                .Entities
+                .Where(x => ((OptionSetValue)x[IntegrationSettings.JobPortal]).Value == (int)JobPortal.Indeed)
+                .ToList();
 
             return integrationSettings;
         }
@@ -89,10 +91,22 @@ namespace JobPostingIntegrationFunctions.Services
             return response;
         }
 
+        public string GetColdLeadExternalId(string jsonContent)
+        {
+            var content = JsonConvert.DeserializeObject<CrmRequestBody>(jsonContent);
+            var entityId = content.PrimaryEntityId;
+
+            var coldLeadsColumns = new ColumnSet(ColdLead.Name, ColdLead.Url, ColdLead.Description, ColdLead.ExternalId, ColdLead.CreatedOn);
+            var deleteEntity = service.Retrieve(EntityName.ColdLeads, new Guid(entityId), coldLeadsColumns);
+            var deleteId = deleteEntity[ColdLead.ExternalId].ToString();
+
+            return deleteId;
+        }
+
         private static DateTime ParseIndeedCreationDate(string creationDate)
         {
             var dateTime = DateTime.Now;
-            if (creationDate == IndeedHitConstants.JustPosted)
+            if (creationDate == IndeedHitConstants.JustPosted || creationDate == IndeedHitConstants.Today)
             {
                 return dateTime;
             }

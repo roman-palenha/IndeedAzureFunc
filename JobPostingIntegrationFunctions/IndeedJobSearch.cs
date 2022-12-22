@@ -1,5 +1,4 @@
 using JobPostingIntegrationFunctions.Constants;
-using JobPostingIntegrationFunctions.Helpers;
 using JobPostingIntegrationFunctions.Models;
 using JobPostingIntegrationFunctions.Services.Interfaces;
 using Microsoft.Azure.WebJobs;
@@ -7,9 +6,7 @@ using Microsoft.Azure.WebJobs.Host;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Xrm.Sdk;
-using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
 
 namespace JobPostingIntegrationFunctions
@@ -18,13 +15,17 @@ namespace JobPostingIntegrationFunctions
     {
 
         [FunctionName("IndeedJobSearch")]
-        public static async Task Run([TimerTrigger("* 0 7 * * 1-5", RunOnStartup = true)] TimerInfo myTimer, ILogger log)
+        public static async Task Run([TimerTrigger("* 0 7 * * 1-5", RunOnStartup = false)] TimerInfo myTimer, ILogger log)
         {
-            IServiceProvider serviceProvider = Startup.ConfigureCRMServices();
+            var serviceProvider = Startup.ConfigureCRMServices(); 
             var service = serviceProvider.GetService<IOrganizationService>();
             if (service != null)
             {
+                serviceProvider = Startup.ConfigureIndeedServices(service);
                 var indeedJobService = serviceProvider.GetService<IIndeedJobService>();
+
+                serviceProvider = Startup.ConfigureAzureServices();
+                var blobStorageService = serviceProvider.GetService<IBlobStorageService>();
 
                 var jobs = await indeedJobService.GetJobs();
                 var indeedJobDetails = new List<IndeedJobDetails>();
@@ -40,12 +41,12 @@ namespace JobPostingIntegrationFunctions
                             Url = jobDetails.FinalUrl
                         };
                         var hash = indeedBlob.GetHashCode();
-                        var existed = AzureHelper.GetRecordFromTable(job.Id);
+                        var existed = blobStorageService.GetRecordFromTable(job.Id);
                         if (existed == null)
                         {
                             jobDetails.JobId = job.Id;
                             indeedJobDetails.Add(jobDetails);
-                            AzureHelper.InsertRecordToTable(job.Id, hash.ToString());
+                            blobStorageService.InsertRecordToTable(job.Id, hash.ToString());
                         }
                     }
                 }
