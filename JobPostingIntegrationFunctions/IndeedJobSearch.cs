@@ -16,16 +16,14 @@ namespace JobPostingIntegrationFunctions
 {
     public static class IndeedJobSearch
     {
-        private static IServiceProvider serviceProvider;
 
         [FunctionName("IndeedJobSearch")]
         public static async Task Run([TimerTrigger("* 0 7 * * 1-5", RunOnStartup = true)] TimerInfo myTimer, ILogger log)
         {
-            serviceProvider = Startup.ConfigureCRMServices();
+            IServiceProvider serviceProvider = Startup.ConfigureCRMServices();
             var service = serviceProvider.GetService<IOrganizationService>();
             if (service != null)
             {
-                var serviceProvider = Startup.ConfigureIndeedServices();
                 var indeedJobService = serviceProvider.GetService<IIndeedJobService>();
 
                 var jobs = await indeedJobService.GetJobs();
