@@ -24,7 +24,7 @@ namespace JobPostingIntegrationFunctions
             var service = serviceProvider.GetService<IOrganizationService>();
             if (service != null)
             {
-                var indeedJobService = serviceProvider.GetService<IIndeedJobService>();
+                var indeedJobService = Startup.ConfigureIndeedServices(service).GetService<IIndeedJobService>();
 
                 var jobs = await indeedJobService.GetJobs();
                 var indeedJobDetails = new List<IndeedJobDetails>();

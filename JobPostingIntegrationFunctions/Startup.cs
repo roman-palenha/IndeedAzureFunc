@@ -26,7 +26,7 @@ namespace JobPostingIntegrationFunctions
                 .AddSingleton(s =>
                 {
                     CrmServiceClient conn = new CrmServiceClient(ConfigurationManager.AppSettings["CRMConnectionString"]);
-                    return (IOrganizationService)conn.OrganizationServiceProxy;
+                    return (IOrganizationService)conn;
                 });
 
             return services.BuildServiceProvider();
@@ -35,10 +35,12 @@ namespace JobPostingIntegrationFunctions
         public static IServiceProvider ConfigureIndeedServices(IOrganizationService organizationService)
         {
             var services = new ServiceCollection()
-                .AddScoped(s =>
+                .AddScoped<ICrmService>(s =>
                 {
                     return new CrmService(organizationService);
-                });
+                })
+                .AddScoped<IHttpRequestService, HttpRequestService>()
+                .AddScoped<IIndeedJobService, IndeedJobService>();
 
             return services.BuildServiceProvider();
         }
