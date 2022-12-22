@@ -111,11 +111,7 @@ namespace JobPostingIntegrationFunctions.Services
         private static DateTime ParseIndeedCreationDate(string creationDate)
         {
             var dateTime = DateTime.Now;
-            if (creationDate == IndeedHitConstants.JustPosted || creationDate == IndeedHitConstants.Today)
-            {
-                return dateTime;
-            }
-            else
+            if (creationDate != IndeedHitConstants.JustPosted && creationDate != IndeedHitConstants.Today)
             {
                 var days = int.Parse(creationDate.Split(' ')[0]);
                 dateTime = dateTime.Subtract(TimeSpan.FromDays(days));
