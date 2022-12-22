@@ -31,7 +31,7 @@ namespace JobPostingIntegrationFunctions
                     var blobStorageService = serviceProvider.GetService<IBlobStorageService>();
 
                     var records = blobStorageService.GetRecordsFromTable();
-                    if (records.Any(x => x.Id == deleteId))
+                    if (records.Any(x => x.Id.Equals(deleteId, StringComparison.InvariantCultureIgnoreCase)))
                     {
                         blobStorageService.DeleteRecordFromTable(deleteId);
                     }

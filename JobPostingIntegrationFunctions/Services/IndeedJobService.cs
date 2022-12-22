@@ -83,7 +83,7 @@ namespace JobPostingIntegrationFunctions.Services
 
         private string CreateUri(Entity item)
         {
-            var query = item.GetAttributeValue<string>(IntegrationSettings.Query).Replace(" ", "%20");
+            var query = item.GetAttributeValue<string>(IntegrationSettings.Query).Replace(" ", StringSymbols.Space);
             var location = item.GetAttributeValue<string>(IntegrationSettings.Location);
             var uri = JobSearch.Url + JobSearch.Query + $"{query}" + JobSearch.Location + $"{location}";
 

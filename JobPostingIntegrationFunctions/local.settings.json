@@ -3,7 +3,7 @@
   "Values": {
     "AzureWebJobsStorage": "UseDevelopmentStorage=true",
     "AzureWebJobsDashboard": "UseDevelopmentStorage=true",
-    "CRMConnectionString": "AuthType=Office365;Username=mykhailo.vashchuk@logiqapps.com;Password=Qaf30514;Url=https://orgfd88e666.crm19.dynamics.com",
+    "CRMConnectionString": "AuthType=ClientSecret;url=https://orgfd88e666.crm19.dynamics.com;ClientId=3c2a685e-0ff0-476c-b0b1-e318459b0be1;ClientSecret=TnI8Q~SUE~K8l2HCv.4d7RRJg.PB_gZeOAMMMcUY",
     "ApiConfiguration": "Indeed",
     "IntegrationSettings": "Stokholm Dynamics 365",
     "AzureConnectionString": "DefaultEndpointsProtocol=https;AccountName=jobssearchindeeddev;AccountKey=b1NUsF7rw3GvdjtNpIY5y5ovW3/l5KN66kVuI64REYf1CClSOXPeXJYh8FiI+wQBKAhoEsBSuZC6+AStyzvtsg==;EndpointSuffix=core.windows.net"

@@ -16,7 +16,7 @@ namespace JobPostingIntegrationFunctions
     {
 
         [FunctionName("IndeedJobSearch")]
-        public static async Task Run([TimerTrigger("* 0 7 * * 1-5", RunOnStartup = false)] TimerInfo myTimer, ILogger log)
+        public static async Task Run([TimerTrigger("* 0 7 * * 1-5", RunOnStartup = true)] TimerInfo myTimer, ILogger log)
         {
             try
             {
@@ -35,7 +35,7 @@ namespace JobPostingIntegrationFunctions
                     foreach (var job in jobs)
                     {
                         var jobDetails = await indeedJobService.GetJobDetails(job.Id);
-                        if (jobDetails.CreationDate != IndeedHitConstants.More30Days)
+                        if (!jobDetails.CreationDate.Equals(IndeedHitConstants.More30Days, StringComparison.InvariantCultureIgnoreCase))
                         {
                             var indeedBlob = new IndeedBlob
                             {

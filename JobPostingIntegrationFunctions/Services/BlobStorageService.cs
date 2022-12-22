@@ -1,27 +1,29 @@
-﻿using JobPostingIntegrationFunctions.Models;
+﻿using JobPostingIntegrationFunctions.Configurations;
+using JobPostingIntegrationFunctions.Models;
 using JobPostingIntegrationFunctions.Services.Interfaces;
 using Microsoft.WindowsAzure.Storage;
-using Microsoft.WindowsAzure.Storage.Queue;
 using Microsoft.WindowsAzure.Storage.Table;
+using System;
 using System.Collections.Generic;
 
 namespace JobPostingIntegrationFunctions.Services
 {
     public class BlobStorageService : IBlobStorageService
     {
-        private readonly string connectionString;
+        private readonly IAzureBlobConfiguration azureBlobConfiguration;
 
-        public BlobStorageService(string connectionString)
+        public BlobStorageService(IAzureBlobConfiguration azureBlobConfiguration)
         {
-            this.connectionString = connectionString;
+            this.azureBlobConfiguration = azureBlobConfiguration ?? throw new ArgumentNullException(nameof(azureBlobConfiguration));
         }
 
         public void DeleteRecordFromTable(string id)
         {
             var table = GetAzureTable(Constants.AzureTable.IndeedJobs);
             var record = GetRecordFromTable(id);
+
             TableOperation tableOperation = TableOperation.Delete(record);
-            TableResult tableResult = table.Execute(tableOperation);
+            table.Execute(tableOperation);
         }
 
         public BlobRecord GetRecordFromTable(string id)
@@ -54,22 +56,12 @@ namespace JobPostingIntegrationFunctions.Services
             record.AssignPartitionKey();
 
             TableOperation tableOperation = TableOperation.InsertOrReplace(record);
-            TableResult tableResult = table.Execute(tableOperation);
-        }
-
-        private CloudQueue GetAzureQueue(string name)
-        {       
-            var storageAccount = CloudStorageAccount.Parse(connectionString);
-            var queueClient = storageAccount.CreateCloudQueueClient();
-            var queue = queueClient.GetQueueReference(name);
-            queue.CreateIfNotExists();
-
-            return queue;
+            table.Execute(tableOperation);
         }
 
         private CloudTable GetAzureTable(string name)
         {
-            var storageAccount = CloudStorageAccount.Parse(connectionString);
+            var storageAccount = CloudStorageAccount.Parse(azureBlobConfiguration.ConnectionString);
             var tableClient = storageAccount.CreateCloudTableClient();
             var cloudTable = tableClient.GetTableReference(name);
             cloudTable.CreateIfNotExists();

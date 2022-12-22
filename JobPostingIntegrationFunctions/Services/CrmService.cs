@@ -22,7 +22,7 @@ namespace JobPostingIntegrationFunctions.Services
 
         public IndeedApiConfiguration GetApiConfiguration()
         {
-            var configurationName = Environment.GetEnvironmentVariable("ApiConfiguration");
+            var configurationName = Environment.GetEnvironmentVariable(AppConfigurations.ApiConfiguration);
             var configurationColumns = new ColumnSet(ConfigurationSettings.Name, ConfigurationSettings.RequestUrl, ConfigurationSettings.RapidHost, ConfigurationSettings.RapidKey);
             var expr = new QueryExpression
             {
@@ -33,7 +33,7 @@ namespace JobPostingIntegrationFunctions.Services
 
             var configuration = service.RetrieveMultiple(expr)
                 .Entities
-                .FirstOrDefault(x => x.Attributes[ConfigurationSettings.Name].ToString().Equals(configurationName));
+                .FirstOrDefault(x => x.Attributes[ConfigurationSettings.Name].ToString().Equals(configurationName, StringComparison.InvariantCultureIgnoreCase));
 
             var apiConfiguration = new IndeedApiConfiguration
             {
@@ -51,12 +51,24 @@ namespace JobPostingIntegrationFunctions.Services
             {
                 EntityName = EntityName.IntegrationSettings,
                 ColumnSet = integrationColumns,
+                Criteria =
+                {
+                    Conditions =
+                    {
+                        new ConditionExpression() { 
+                            AttributeName = IntegrationSettings.JobPortal, 
+                            Operator = ConditionOperator.Equal, 
+                            Values = {
+                                (int)JobPortal.Indeed 
+                            } 
+                        }
+                    }
+                }
             };
 
             var integrationSettings = service
                 .RetrieveMultiple(expr)
                 .Entities
-                .Where(x => ((OptionSetValue)x[IntegrationSettings.JobPortal]).Value == (int)JobPortal.Indeed)
                 .ToList();
 
             return integrationSettings;

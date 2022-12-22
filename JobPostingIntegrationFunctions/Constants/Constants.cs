@@ -73,4 +73,14 @@ namespace JobPostingIntegrationFunctions.Constants
         public const string CRMConnectionString = "CRMConnectionString";
         public const string AzureConnectionString = "AzureConnectionString";
     } 
+
+    public static class AppConfigurations
+    {
+        public const string ApiConfiguration = "ApiConfiguration";
+    }
+
+    public static class StringSymbols
+    {
+        public const string Space = "%20";
+    }
 }

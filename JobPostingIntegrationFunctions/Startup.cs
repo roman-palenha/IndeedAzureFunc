@@ -1,4 +1,5 @@
-﻿using JobPostingIntegrationFunctions.Constants;
+﻿using JobPostingIntegrationFunctions.Configurations;
+using JobPostingIntegrationFunctions.Constants;
 using JobPostingIntegrationFunctions.Models;
 using JobPostingIntegrationFunctions.Services;
 using JobPostingIntegrationFunctions.Services.Interfaces;
@@ -41,7 +42,8 @@ namespace JobPostingIntegrationFunctions
             var services = new ServiceCollection()
                 .AddScoped<IBlobStorageService>(s =>
                 {
-                    return new BlobStorageService(ConfigurationManager.AppSettings[ConnectionStrings.AzureConnectionString]);
+                    var azureBlobConfiguration = new AzureBlobConfiguration { ConnectionString = ConfigurationManager.AppSettings[ConnectionStrings.AzureConnectionString] };
+                    return new BlobStorageService(azureBlobConfiguration);
                 });
 
             return services.BuildServiceProvider();
