@@ -40,11 +40,8 @@ namespace JobPostingIntegrationFunctions
         public static IServiceProvider ConfigureAzureServices()
         {
             var services = new ServiceCollection()
-                .AddScoped<IBlobStorageService>(s =>
-                {
-                    var azureBlobConfiguration = new AzureBlobConfiguration { ConnectionString = ConfigurationManager.AppSettings[ConnectionStrings.AzureConnectionString] };
-                    return new BlobStorageService(azureBlobConfiguration);
-                });
+                .AddSingleton<IAzureBlobConfiguration, AzureBlobConfiguration>()
+                .AddScoped<IBlobStorageService, BlobStorageService>();
 
             return services.BuildServiceProvider();
         }

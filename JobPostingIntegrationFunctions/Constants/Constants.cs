@@ -1,6 +1,4 @@
-﻿using System.CodeDom;
-
-namespace JobPostingIntegrationFunctions.Constants
+﻿namespace JobPostingIntegrationFunctions.Constants
 {
     public static class EntityName
     {
