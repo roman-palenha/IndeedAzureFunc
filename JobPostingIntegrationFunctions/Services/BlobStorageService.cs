@@ -19,6 +19,9 @@ namespace JobPostingIntegrationFunctions.Services
 
         public void DeleteRecordFromTable(string id)
         {
+            if (id == null)
+                throw new ArgumentNullException(nameof(id));
+
             var table = GetAzureTable(Constants.AzureTable.IndeedJobs);
             var record = GetRecordFromTable(id);
 
@@ -28,6 +31,9 @@ namespace JobPostingIntegrationFunctions.Services
 
         public BlobRecord GetRecordFromTable(string id)
         {
+            if (id == null)
+                throw new ArgumentNullException(nameof(id));
+
             var table = GetAzureTable(Constants.AzureTable.IndeedJobs);
             TableOperation tableOperation = TableOperation.Retrieve<BlobRecord>(id, id);
             TableResult tableResult = table.Execute(tableOperation);
@@ -46,6 +52,12 @@ namespace JobPostingIntegrationFunctions.Services
 
         public void InsertRecordToTable(string id, string hash)
         {
+            if (id == null)
+                throw new ArgumentNullException(nameof(id));
+
+            if (hash == null)
+                throw new ArgumentNullException(nameof(hash));
+
             var table = GetAzureTable(Constants.AzureTable.IndeedJobs);
             var record = new BlobRecord()
             {
@@ -61,6 +73,9 @@ namespace JobPostingIntegrationFunctions.Services
 
         private CloudTable GetAzureTable(string name)
         {
+            if (name == null)
+                throw new ArgumentNullException(nameof(name));
+
             var storageAccount = CloudStorageAccount.Parse(azureBlobConfiguration.ConnectionString);
             var tableClient = storageAccount.CreateCloudTableClient();
             var cloudTable = tableClient.GetTableReference(name);
