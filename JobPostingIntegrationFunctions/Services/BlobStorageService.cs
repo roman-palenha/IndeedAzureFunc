@@ -19,7 +19,7 @@ namespace JobPostingIntegrationFunctions.Services
 
         public void DeleteRecordFromTable(string id)
         {
-            if (id == null)
+            if (string.IsNullOrEmpty(id))
                 throw new ArgumentNullException(nameof(id));
 
             var table = GetAzureTable(Constants.AzureTable.IndeedJobs);
@@ -31,7 +31,7 @@ namespace JobPostingIntegrationFunctions.Services
 
         public BlobRecord GetRecordFromTable(string id)
         {
-            if (id == null)
+            if (string.IsNullOrEmpty(id))
                 throw new ArgumentNullException(nameof(id));
 
             var table = GetAzureTable(Constants.AzureTable.IndeedJobs);
@@ -52,10 +52,10 @@ namespace JobPostingIntegrationFunctions.Services
 
         public void InsertRecordToTable(string id, string hash)
         {
-            if (id == null)
+            if (string.IsNullOrEmpty(id))
                 throw new ArgumentNullException(nameof(id));
 
-            if (hash == null)
+            if (string.IsNullOrEmpty(hash))
                 throw new ArgumentNullException(nameof(hash));
 
             var table = GetAzureTable(Constants.AzureTable.IndeedJobs);
@@ -63,17 +63,27 @@ namespace JobPostingIntegrationFunctions.Services
             {
                 Id = id,
                 Hash = hash,
+                RowKey = id.ToString(),
+                PartitionKey = Guid.NewGuid().ToString()
             };
-            record.AssignRowKey();
-            record.AssignPartitionKey();
 
             TableOperation tableOperation = TableOperation.InsertOrReplace(record);
             table.Execute(tableOperation);
         }
 
+        public bool RecordExistsInBlobTable(string id)
+        {
+            if (string.IsNullOrEmpty(id))
+                throw new ArgumentNullException(nameof(id));
+
+            var record = GetRecordFromTable(id);
+
+            return record != null;
+        }
+
         private CloudTable GetAzureTable(string name)
         {
-            if (name == null)
+            if (string.IsNullOrEmpty(name))
                 throw new ArgumentNullException(nameof(name));
 
             var storageAccount = CloudStorageAccount.Parse(azureBlobConfiguration.ConnectionString);

@@ -1,8 +1,9 @@
+using JobPostingIntegrationFunctions.Models;
 using JobPostingIntegrationFunctions.Services.Interfaces;
 using Microsoft.Azure.WebJobs;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using Microsoft.Xrm.Sdk;
+using Newtonsoft.Json;
 using System;
 using System.Linq;
 using System.Net.Http;
@@ -17,26 +18,22 @@ namespace JobPostingIntegrationFunctions
         {
             try
             {
-                var serviceProvider = Startup.ConfigureCRMServices();
-                var service = serviceProvider.GetService<IOrganizationService>();
-                if (service != null)
+                var serviceProvider = Startup.ConfigureIndeedServices();
+                var indeedJobService = serviceProvider.GetService<IIndeedJobService>();
+
+                var jsonContent = await req.Content.ReadAsStringAsync();
+                var content = JsonConvert.DeserializeObject<CrmRequestBody>(jsonContent);
+                var deleteId = indeedJobService.GetColdLeadExternalId(content.PrimaryEntityId);
+
+                var blobStorageService = serviceProvider.GetService<IBlobStorageService>();
+
+                var records = blobStorageService.GetRecordsFromTable();
+                if (records.Any(x => x.Id.Equals(deleteId, StringComparison.InvariantCultureIgnoreCase)))
                 {
-                    serviceProvider = Startup.ConfigureIndeedServices(service);
-                    var indeedJobService = serviceProvider.GetService<IIndeedJobService>();
-
-                    var jsonContent = await req.Content.ReadAsStringAsync();
-                    var deleteId = indeedJobService.GetColdLeadExternalId(jsonContent);
-
-                    serviceProvider = Startup.ConfigureAzureServices();
-                    var blobStorageService = serviceProvider.GetService<IBlobStorageService>();
-
-                    var records = blobStorageService.GetRecordsFromTable();
-                    if (records.Any(x => x.Id.Equals(deleteId, StringComparison.InvariantCultureIgnoreCase)))
-                    {
-                        blobStorageService.DeleteRecordFromTable(deleteId);
-                    }
+                    blobStorageService.DeleteRecordFromTable(deleteId);
                 }
-            } catch(Exception ex)
+            }
+            catch (Exception ex)
             {
                 log.LogError(ex.Message);
             }

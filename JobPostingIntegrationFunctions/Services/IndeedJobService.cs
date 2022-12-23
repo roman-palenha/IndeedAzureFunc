@@ -24,7 +24,7 @@ namespace JobPostingIntegrationFunctions.Services
 
         public async Task<IndeedJobDetails> GetJobDetails(string id)
         {
-            var request = CreateHttpRequest(JobDetails.Url + id);
+            var request = CreateHttpGetRequest(JobDetails.Url + id);
             return await httpRequestService.ExecuteGetRequest<IndeedJobDetails>(request);
         }
 
@@ -41,7 +41,7 @@ namespace JobPostingIntegrationFunctions.Services
                     var uri = CreateUri(item);
                     uri += JobSearch.Page + i.ToString();
 
-                    var request = CreateHttpRequest(uri);
+                    var request = CreateHttpGetRequest(uri);
                     var response = await httpRequestService.ExecuteGetRequest<IndeedResponse>(request);
                     result.AddRange(response.Hits);
                 }
@@ -65,7 +65,7 @@ namespace JobPostingIntegrationFunctions.Services
             return crmService.GetApiConfiguration();
         }
 
-        private HttpRequestMessage CreateHttpRequest(string uri)
+        private HttpRequestMessage CreateHttpGetRequest(string uri)
         {
             var request = new HttpRequestMessage
             {

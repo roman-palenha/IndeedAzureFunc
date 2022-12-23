@@ -9,6 +9,6 @@ namespace JobPostingIntegrationFunctions.Services.Interfaces
         OrganizationResponse BulkCreate(IEnumerable<IndeedJobDetails> jobDetails);
         IndeedApiConfiguration GetApiConfiguration();
         List<Entity> GetIntegrationSettings();
-        string GetColdLeadExternalId(string jsonContent);
+        string GetColdLeadExternalId(string id);
     }
 }

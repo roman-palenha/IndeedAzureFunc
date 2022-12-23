@@ -14,49 +14,44 @@ namespace JobPostingIntegrationFunctions
 {
     public static class IndeedJobSearch
     {
-
         [FunctionName("IndeedJobSearch")]
         public static async Task Run([TimerTrigger("* 0 7 * * 1-5", RunOnStartup = true)] TimerInfo myTimer, ILogger log)
         {
             try
             {
-                var serviceProvider = Startup.ConfigureCRMServices();
-                var service = serviceProvider.GetService<IOrganizationService>();
-                if (service != null)
+                var serviceProvider = Startup.ConfigureIndeedServices();
+                var indeedJobService = serviceProvider.GetService<IIndeedJobService>();
+
+                var blobStorageService = serviceProvider.GetService<IBlobStorageService>();
+
+                var jobs = await indeedJobService.GetJobs();
+                var indeedJobDetails = new List<IndeedJobDetails>();
+                foreach (var job in jobs)
                 {
-                    serviceProvider = Startup.ConfigureIndeedServices(service);
-                    var indeedJobService = serviceProvider.GetService<IIndeedJobService>();
-
-                    serviceProvider = Startup.ConfigureAzureServices();
-                    var blobStorageService = serviceProvider.GetService<IBlobStorageService>();
-
-                    var jobs = await indeedJobService.GetJobs();
-                    var indeedJobDetails = new List<IndeedJobDetails>();
-                    foreach (var job in jobs)
+                    var jobDetails = await indeedJobService.GetJobDetails(job.Id);
+                    if (!jobDetails.CreationDate.Equals(IndeedHitConstants.More30Days, StringComparison.InvariantCultureIgnoreCase))
                     {
-                        var jobDetails = await indeedJobService.GetJobDetails(job.Id);
-                        if (!jobDetails.CreationDate.Equals(IndeedHitConstants.More30Days, StringComparison.InvariantCultureIgnoreCase))
+                        var indeedBlob = new IndeedBlob
                         {
-                            var indeedBlob = new IndeedBlob
-                            {
-                                Description = jobDetails.Description,
-                                Title = jobDetails.Title,
-                                Url = jobDetails.FinalUrl
-                            };
-                            var hash = indeedBlob.GetHashCode();
-                            var existed = blobStorageService.GetRecordFromTable(job.Id);
-                            if (existed == null)
-                            {
-                                jobDetails.JobId = job.Id;
-                                indeedJobDetails.Add(jobDetails);
-                                blobStorageService.InsertRecordToTable(job.Id, hash.ToString());
-                            }
+                            Description = jobDetails.Description,
+                            Title = jobDetails.Title,
+                            Url = jobDetails.FinalUrl
+                        };
+                        
+                        var exists = blobStorageService.RecordExistsInBlobTable(job.Id);
+                        if (!exists)
+                        {
+                            jobDetails.JobId = job.Id;
+                            indeedJobDetails.Add(jobDetails);
+                            var hash = indeedBlob.GetHash();
+                            blobStorageService.InsertRecordToTable(job.Id, hash.ToString());
                         }
                     }
-                    var response = indeedJobService.CreateCrmJobs(indeedJobDetails);
-                    response.CheckFault(log);
-                } 
-            } catch(Exception ex)
+                }
+                var response = indeedJobService.CreateCrmJobs(indeedJobDetails);
+                response.CheckFault(log);
+            }
+            catch (Exception ex)
             {
                 log.LogError(ex.Message);
             }

@@ -9,6 +9,8 @@ namespace JobPostingIntegrationFunctions.Services.Interfaces
 
         BlobRecord GetRecordFromTable(string id);
 
+        bool RecordExistsInBlobTable(string id);
+
         IEnumerable<BlobRecord> GetRecordsFromTable();
 
         void DeleteRecordFromTable(string id);

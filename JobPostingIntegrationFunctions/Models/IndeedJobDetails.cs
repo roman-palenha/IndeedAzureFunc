@@ -5,8 +5,6 @@ namespace JobPostingIntegrationFunctions.Models
     public class IndeedJobDetails
     {
         public string JobId { get; set; }
-        [JsonProperty("company")]
-        public IndeedJobCompany Company { get; set; }
 
         [JsonProperty("creation_date")]
         public string CreationDate { get; set; }

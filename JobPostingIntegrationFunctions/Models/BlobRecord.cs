@@ -6,15 +6,5 @@ namespace JobPostingIntegrationFunctions.Models
     {
         public string Id { get; set; }
         public string Hash { get; set; }
-
-        public void AssignRowKey()
-        {
-            RowKey = Id.ToString();
-        }
-
-        public void AssignPartitionKey()
-        {
-            PartitionKey = Id.ToString();
-        }
     }
 }

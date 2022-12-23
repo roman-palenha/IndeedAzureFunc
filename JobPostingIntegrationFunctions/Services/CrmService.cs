@@ -4,7 +4,6 @@ using JobPostingIntegrationFunctions.Services.Interfaces;
 using Microsoft.Xrm.Sdk;
 using Microsoft.Xrm.Sdk.Messages;
 using Microsoft.Xrm.Sdk.Query;
-using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -24,27 +23,7 @@ namespace JobPostingIntegrationFunctions.Services
         {
             var configurationName = Environment.GetEnvironmentVariable(AppConfigurations.ApiConfiguration);
             var configurationColumns = new ColumnSet(ConfigurationSettings.Name, ConfigurationSettings.RequestUrl, ConfigurationSettings.RapidHost, ConfigurationSettings.RapidKey);
-            var expr = new QueryExpression
-            {
-                EntityName = EntityName.ConfigurationSettings,
-                ColumnSet = configurationColumns,
-                TopCount = 1,
-                Criteria =
-                {
-                    Conditions =
-                    {
-                        new ConditionExpression()
-                        {
-                            AttributeName = ConfigurationSettings.Name,
-                            Operator = ConditionOperator.Equal,
-                            Values =
-                            {
-                                configurationName
-                            }
-                        }
-                    }
-                }
-            };
+            QueryExpression expr = GetApiConfigurationQueryExpression(configurationName, configurationColumns);
 
             var configuration = service.RetrieveMultiple(expr)
                 .Entities
@@ -65,24 +44,7 @@ namespace JobPostingIntegrationFunctions.Services
         public List<Entity> GetIntegrationSettings()
         {
             var integrationColumns = new ColumnSet(IntegrationSettings.Name, IntegrationSettings.JobPortal, IntegrationSettings.Query, IntegrationSettings.Localization, IntegrationSettings.Location, IntegrationSettings.NumberOfPages);
-            var expr = new QueryExpression
-            {
-                EntityName = EntityName.IntegrationSettings,
-                ColumnSet = integrationColumns,
-                Criteria =
-                {
-                    Conditions =
-                    {
-                        new ConditionExpression() { 
-                            AttributeName = IntegrationSettings.JobPortal, 
-                            Operator = ConditionOperator.Equal, 
-                            Values = {
-                                (int)JobPortal.Indeed 
-                            } 
-                        }
-                    }
-                }
-            };
+            QueryExpression expr = GetIntegrationSettingsQueryExpression(integrationColumns);
 
             var integrationSettings = service
                 .RetrieveMultiple(expr)
@@ -104,14 +66,14 @@ namespace JobPostingIntegrationFunctions.Services
                 Requests = new OrganizationRequestCollection()
             };
 
-            foreach (var d in jobDetails)
+            foreach (var indeedJob in jobDetails)
             {
                 Entity detailEntity = new Entity(EntityName.ColdLeads);
-                detailEntity[ColdLead.Name] = d.Title;
-                detailEntity[ColdLead.Url] = d.FinalUrl;
-                detailEntity[ColdLead.ExternalId] = d.JobId;
-                detailEntity[ColdLead.Description] = d.Description;
-                detailEntity[ColdLead.CreatedOn] = ParseIndeedCreationDate(d.CreationDate);
+                detailEntity[ColdLead.Name] = indeedJob.Title;
+                detailEntity[ColdLead.Url] = indeedJob.FinalUrl;
+                detailEntity[ColdLead.ExternalId] = indeedJob.JobId;
+                detailEntity[ColdLead.Description] = indeedJob.Description;
+                detailEntity[ColdLead.CreatedOn] = ParseIndeedCreationDate(indeedJob.CreationDate);
 
                 CreateRequest cr = new CreateRequest { Target = detailEntity };
                 request.Requests.Add(cr);
@@ -121,28 +83,17 @@ namespace JobPostingIntegrationFunctions.Services
             return response;
         }
 
-        public string GetColdLeadExternalId(string jsonContent)
+        public string GetColdLeadExternalId(string id)
         {
-            if (jsonContent == null)
-                throw new ArgumentNullException(nameof(jsonContent));
-
-            var entityId = DeserializeCrmRequestBody(jsonContent);
             var coldLeadsColumn = new ColumnSet(ColdLead.ExternalId);
-            var deleteEntity = service.Retrieve(EntityName.ColdLeads, new Guid(entityId), coldLeadsColumn);
+            var deleteEntity = service.Retrieve(EntityName.ColdLeads, new Guid(id), coldLeadsColumn);
             if (deleteEntity == null)
-                throw new NullReferenceException($"Entity with id {entityId} is not found.");
+                throw new NullReferenceException($"Entity with id {id} is not found.");
 
-            var deleteId = deleteEntity[ColdLead.ExternalId].ToString();
+            var deleteId = deleteEntity.GetAttributeValue<string>(ColdLead.ExternalId);
             return deleteId;
         }
 
-        private static string DeserializeCrmRequestBody(string jsonContent)
-        {
-            var content = JsonConvert.DeserializeObject<CrmRequestBody>(jsonContent);
-            var entityId = content.PrimaryEntityId;
-
-            return entityId;
-        }
         private static DateTime ParseIndeedCreationDate(string creationDate)
         {
             var dateTime = DateTime.Now;
@@ -153,6 +104,55 @@ namespace JobPostingIntegrationFunctions.Services
             }
 
             return dateTime;
+        }
+
+        private static QueryExpression GetApiConfigurationQueryExpression(string configurationName, ColumnSet configurationColumns)
+        {
+            return new QueryExpression
+            {
+                EntityName = EntityName.ConfigurationSettings,
+                ColumnSet = configurationColumns,
+                TopCount = 1,
+                Criteria =
+                {
+                    Conditions =
+                    {
+                        new ConditionExpression()
+                        {
+                            AttributeName = ConfigurationSettings.Name,
+                            Operator = ConditionOperator.Equal,
+                            Values =
+                            {
+                                configurationName
+                            }
+                        }
+                    }
+                }
+            };
+        }
+
+        private static QueryExpression GetIntegrationSettingsQueryExpression(ColumnSet integrationColumns)
+        {
+            return new QueryExpression
+            {
+                EntityName = EntityName.IntegrationSettings,
+                ColumnSet = integrationColumns,
+                Criteria =
+                {
+                    Conditions =
+                    {
+                        new ConditionExpression()
+                        {
+                            AttributeName = IntegrationSettings.JobPortal,
+                            Operator = ConditionOperator.Equal,
+                            Values =
+                            {
+                                (int)JobPortal.Indeed
+                            }
+                        }
+                    }
+                }
+            };
         }
     }
 }
