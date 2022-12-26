@@ -1,4 +1,3 @@
-using JobPostingIntegrationFunctions.Constants;
 using JobPostingIntegrationFunctions.Models;
 using JobPostingIntegrationFunctions.Services.Interfaces;
 using Microsoft.Azure.WebJobs;
@@ -26,30 +25,15 @@ namespace JobPostingIntegrationFunctions
 
                 var jobs = await indeedJobService.GetJobs();
                 var indeedJobDetails = new List<IndeedJobDetails>();
-                foreach (var job in jobs)
+
+                Parallel.ForEach(jobs, job =>
                 {
-                    var jobDetails = await indeedJobService.GetJobDetails(job.Id);
-                    if (!jobDetails.CreationDate.Equals(IndeedHitConstants.More30Days, StringComparison.InvariantCultureIgnoreCase))
-                    {
-                        var indeedBlob = new IndeedBlob
-                        {
-                            Description = jobDetails.Description,
-                            Title = jobDetails.Title,
-                            Url = jobDetails.FinalUrl
-                        };
-                        
-                        var exists = blobStorageService.RecordExistsInBlobTable(job.Id);
-                        if (!exists)
-                        {
-                            jobDetails.JobId = job.Id;
-                            indeedJobDetails.Add(jobDetails);
-                            var hash = indeedBlob.GetHash();
-                            blobStorageService.InsertRecordToTable(job.Id, hash.ToString());
-                        }
-                    }
-                }
+                    indeedJobService.ProcessJob(blobStorageService, indeedJobDetails, job).Wait();
+                });
+
                 var response = indeedJobService.CreateCrmJobs(indeedJobDetails);
                 response.CheckFault(log);
+                    
             }
             catch (Exception ex)
             {

@@ -11,5 +11,6 @@ namespace JobPostingIntegrationFunctions.Services.Interfaces
         Task<IEnumerable<IndeedHit>> GetJobs();
         OrganizationResponse CreateCrmJobs(IEnumerable<IndeedJobDetails> jobDetails);
         string GetColdLeadExternalId(string jsonContent);
+        Task ProcessJob(IBlobStorageService blobStorageService, List<IndeedJobDetails> indeedJobDetails, IndeedHit job);
     }
 }

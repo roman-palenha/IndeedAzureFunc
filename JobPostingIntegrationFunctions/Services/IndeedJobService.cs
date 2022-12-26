@@ -50,6 +50,29 @@ namespace JobPostingIntegrationFunctions.Services
             return result;
         }
 
+        public async Task ProcessJob(IBlobStorageService blobStorageService, List<IndeedJobDetails> indeedJobDetails, IndeedHit job)
+        {
+            var jobDetails = await GetJobDetails(job.Id);
+            if (!jobDetails.CreationDate.Equals(IndeedHitConstants.More30Days, StringComparison.InvariantCultureIgnoreCase))
+            {
+                var indeedBlob = new IndeedBlob
+                {
+                    Description = jobDetails.Description,
+                    Title = jobDetails.Title,
+                    Url = jobDetails.FinalUrl
+                };
+
+                var exists = blobStorageService.RecordExistsInBlobTable(job.Id);
+                if (!exists)
+                {
+                    jobDetails.JobId = job.Id;
+                    indeedJobDetails.Add(jobDetails);
+                    var hash = indeedBlob.GetHash();
+                    blobStorageService.InsertRecordToTable(job.Id, hash.ToString());
+                }
+            }
+        }
+
         public OrganizationResponse CreateCrmJobs(IEnumerable<IndeedJobDetails> jobDetails)
         {
             return crmService.BulkCreate(jobDetails);
