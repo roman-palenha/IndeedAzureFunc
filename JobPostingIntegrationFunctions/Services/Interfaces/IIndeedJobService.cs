@@ -7,10 +7,8 @@ namespace JobPostingIntegrationFunctions.Services.Interfaces
 {
     public interface IIndeedJobService
     {
-        Task<IndeedJobDetails> GetJobDetails(string id);
-        Task<IEnumerable<IndeedHit>> GetJobs(Entity integrationSetting);
+        Task GetJobsFromApi(IBlobStorageService blobStorageService, List<IndeedJobDetails> indeedJobDetails);
         OrganizationResponse CreateCrmJobs(IEnumerable<IndeedJobDetails> jobDetails);
         string GetColdLeadExternalId(string jsonContent);
-        Task ProcessJob(IBlobStorageService blobStorageService, List<IndeedJobDetails> indeedJobDetails, IndeedHit job);
     }
 }

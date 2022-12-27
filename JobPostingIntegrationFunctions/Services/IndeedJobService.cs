@@ -22,19 +22,38 @@ namespace JobPostingIntegrationFunctions.Services
             this.apiConfiguration = GetApiConfiguration();
         }
 
-        public async Task<IndeedJobDetails> GetJobDetails(string id)
+        public async Task GetJobsFromApi(IBlobStorageService blobStorageService, List<IndeedJobDetails> indeedJobDetails)
         {
-            var request = CreateHttpGetRequest(JobDetails.Url + id);
-            return await httpRequestService.ExecuteGetRequest<IndeedJobDetails>(request);
+            var processJobsTasks = new List<Task>();
+            var integrationSettings = crmService.GetIntegrationSettings();
+            foreach(var settings in integrationSettings)
+            {
+                var jobs = await GetJobs(settings);
+                processJobsTasks.Add(ProcessJobs(jobs, blobStorageService, indeedJobDetails));
+            }
+
+           await Task.WhenAll(processJobsTasks);
+        }
+    
+        public OrganizationResponse CreateCrmJobs(IEnumerable<IndeedJobDetails> jobDetails)
+        {
+            return crmService.BulkCreate(jobDetails);
         }
 
-        public async Task<IEnumerable<IndeedHit>> GetJobs(Entity integrationSetting)
+        public string GetColdLeadExternalId(string jsonContent)
         {
-            //var integrationSettings = crmService.GetIntegrationSettings();
-            var numberOfPages = integrationSetting.GetAttributeValue<int>(IntegrationSettings.NumberOfPages);
+            return crmService.GetColdLeadExternalId(jsonContent);
+        }
 
+        private IndeedApiConfiguration GetApiConfiguration()
+        {
+            return crmService.GetApiConfiguration();
+        }
+
+        private async Task<IEnumerable<IndeedHit>> GetJobs(IntegrationSettingsDto integrationSetting)
+        {
             var uri = CreateUri(integrationSetting);
-            uri += JobSearch.Page + numberOfPages.ToString();
+            uri += JobSearch.Page + integrationSetting.Page.ToString();
 
             var request = CreateHttpGetRequest(uri);
             var response = await httpRequestService.ExecuteGetRequest<IndeedResponse>(request);
@@ -42,7 +61,24 @@ namespace JobPostingIntegrationFunctions.Services
             return response.Hits;
         }
 
-        public async Task ProcessJob(IBlobStorageService blobStorageService, List<IndeedJobDetails> indeedJobDetails, IndeedHit job)
+        private async Task<IndeedJobDetails> GetJobDetails(string id)
+        {
+            var request = CreateHttpGetRequest(JobDetails.Url + id);
+            return await httpRequestService.ExecuteGetRequest<IndeedJobDetails>(request);
+        }
+
+        private async Task ProcessJobs(IEnumerable<IndeedHit> jobs, IBlobStorageService blobStorageService, List<IndeedJobDetails> indeedJobDetails)
+        {
+            var processJobTasks = new List<Task>();
+            foreach (var job in jobs)
+            {
+                processJobTasks.Add(ProcessJob(blobStorageService, indeedJobDetails, job));
+            }
+
+            await Task.WhenAll(processJobTasks);
+        }
+
+        private async Task ProcessJob(IBlobStorageService blobStorageService, List<IndeedJobDetails> indeedJobDetails, IndeedHit job)
         {
             var jobDetails = await GetJobDetails(job.Id);
             if (!jobDetails.CreationDate.Equals(IndeedHitConstants.More30Days, StringComparison.InvariantCultureIgnoreCase))
@@ -65,20 +101,6 @@ namespace JobPostingIntegrationFunctions.Services
             }
         }
 
-        public OrganizationResponse CreateCrmJobs(IEnumerable<IndeedJobDetails> jobDetails)
-        {
-            return crmService.BulkCreate(jobDetails);
-        }
-
-        public string GetColdLeadExternalId(string jsonContent)
-        {
-            return crmService.GetColdLeadExternalId(jsonContent);
-        }
-
-        private IndeedApiConfiguration GetApiConfiguration()
-        {
-            return crmService.GetApiConfiguration();
-        }
 
         private HttpRequestMessage CreateHttpGetRequest(string uri)
         {
@@ -96,16 +118,25 @@ namespace JobPostingIntegrationFunctions.Services
             return request;
         }
 
-        private string CreateUri(Entity item)
+        private string CreateUri(IntegrationSettingsDto integrationSettings)
         {
-            var query = item.GetAttributeValue<string>(IntegrationSettings.Query).Replace(" ", StringSymbols.Space);
-            var location = item.GetAttributeValue<string>(IntegrationSettings.Location);
+            var query = integrationSettings.Query;
+            var location = integrationSettings.Location;
+
             var uri = JobSearch.Url + JobSearch.Query + $"{query}" + JobSearch.Location + $"{location}";
 
-            if (((OptionSetValue)item[IntegrationSettings.Localization]).Value != (int)Localization.DontIncludeLocalization)
-                uri += JobSearch.Locality + $"{item.FormattedValues[IntegrationSettings.Localization].ToLower()}";
+            if (integrationSettings.Localization != Localization.DontIncludeLocalization)
+                uri += JobSearch.Locality + $"{GetLocalization(integrationSettings)}";
 
             return uri;
+        }
+
+        private string GetLocalization(IntegrationSettingsDto integrationSettings)
+        {
+            if (integrationSettings.Localization == Localization.CHFR)
+                return LocalizationStrings.ChFr;
+
+            return integrationSettings.Localization.ToString().ToLower();
         }
     }
 }

@@ -41,7 +41,7 @@ namespace JobPostingIntegrationFunctions.Services
             return apiConfiguration;
         }
 
-        public List<Entity> GetIntegrationSettings()
+        public List<IntegrationSettingsDto> GetIntegrationSettings()
         {
             var integrationColumns = new ColumnSet(IntegrationSettings.Name, IntegrationSettings.JobPortal, IntegrationSettings.Query, IntegrationSettings.Localization, IntegrationSettings.Location, IntegrationSettings.NumberOfPages);
             QueryExpression expr = GetIntegrationSettingsQueryExpression(integrationColumns);
@@ -49,6 +49,7 @@ namespace JobPostingIntegrationFunctions.Services
             var integrationSettings = service
                 .RetrieveMultiple(expr)
                 .Entities
+                .SelectMany(x => ParseToIntegrationSettingsDto(x))
                 .ToList();
 
             return integrationSettings;
@@ -104,6 +105,32 @@ namespace JobPostingIntegrationFunctions.Services
             }
 
             return dateTime;
+        }
+
+        private List<IntegrationSettingsDto> ParseToIntegrationSettingsDto(Entity integrationSettingsEntity)
+        {
+            var name = integrationSettingsEntity.GetAttributeValue<string>(IntegrationSettings.Name);
+            var query = integrationSettingsEntity.GetAttributeValue<string>(IntegrationSettings.Query).Replace(" ", StringSymbols.Space);
+            var location = integrationSettingsEntity.GetAttributeValue<string>(IntegrationSettings.Location);
+            var numberOfPages = integrationSettingsEntity.GetAttributeValue<int>(IntegrationSettings.NumberOfPages);
+            var result = new List<IntegrationSettingsDto>();
+
+            for(int i = 1; i <= numberOfPages; ++i)
+            {
+                var integrationSettings = new IntegrationSettingsDto
+                {
+                    Name = name,
+                    JobPortal = (JobPortal)((OptionSetValue)integrationSettingsEntity[IntegrationSettings.JobPortal]).Value,
+                    Query = query,
+                    Localization = (Localization)((OptionSetValue)integrationSettingsEntity[IntegrationSettings.Localization]).Value,
+                    Location = location,
+                    Page = i
+                };
+
+                result.Add(integrationSettings);
+            }
+
+            return result;
         }
 
         private static QueryExpression GetApiConfigurationQueryExpression(string configurationName, ColumnSet configurationColumns)

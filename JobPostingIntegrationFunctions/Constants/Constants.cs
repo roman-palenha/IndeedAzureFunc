@@ -70,7 +70,7 @@
     {
         public const string CRMConnectionString = "CRMConnectionString";
         public const string AzureConnectionString = "AzureConnectionString";
-    } 
+    }
 
     public static class AppConfigurations
     {
@@ -80,5 +80,10 @@
     public static class StringSymbols
     {
         public const string Space = "%20";
+    }
+
+    public static class LocalizationStrings
+    {
+        public const string ChFr = "ch-fr";
     }
 }
