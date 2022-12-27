@@ -23,7 +23,7 @@ namespace JobPostingIntegrationFunctions
 
                 var blobStorageService = serviceProvider.GetService<IBlobStorageService>();
 
-                var jobs = await indeedJobService.GetJobs();
+                var jobs = await indeedJobService.GetJobs(new Entity());
                 var indeedJobDetails = new List<IndeedJobDetails>();
 
                 Parallel.ForEach(jobs, job =>

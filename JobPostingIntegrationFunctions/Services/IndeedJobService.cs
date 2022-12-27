@@ -28,26 +28,18 @@ namespace JobPostingIntegrationFunctions.Services
             return await httpRequestService.ExecuteGetRequest<IndeedJobDetails>(request);
         }
 
-        public async Task<IEnumerable<IndeedHit>> GetJobs()
+        public async Task<IEnumerable<IndeedHit>> GetJobs(Entity integrationSetting)
         {
-            var result = new List<IndeedHit>();
-            var integrationSettings = crmService.GetIntegrationSettings();
-            foreach (var item in integrationSettings)
-            {
-                var numberOfPages = item.GetAttributeValue<int>(IntegrationSettings.NumberOfPages);
+            //var integrationSettings = crmService.GetIntegrationSettings();
+            var numberOfPages = integrationSetting.GetAttributeValue<int>(IntegrationSettings.NumberOfPages);
 
-                for (int i = 1; i <= numberOfPages; i++)
-                {
-                    var uri = CreateUri(item);
-                    uri += JobSearch.Page + i.ToString();
+            var uri = CreateUri(integrationSetting);
+            uri += JobSearch.Page + numberOfPages.ToString();
 
-                    var request = CreateHttpGetRequest(uri);
-                    var response = await httpRequestService.ExecuteGetRequest<IndeedResponse>(request);
-                    result.AddRange(response.Hits);
-                }
-            }
+            var request = CreateHttpGetRequest(uri);
+            var response = await httpRequestService.ExecuteGetRequest<IndeedResponse>(request);
 
-            return result;
+            return response.Hits;
         }
 
         public async Task ProcessJob(IBlobStorageService blobStorageService, List<IndeedJobDetails> indeedJobDetails, IndeedHit job)
