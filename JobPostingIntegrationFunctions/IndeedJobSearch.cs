@@ -19,14 +19,10 @@ namespace JobPostingIntegrationFunctions
             try
             {
                 var serviceProvider = Startup.ConfigureIndeedServices();
-                var indeedJobService = serviceProvider.GetService<IIndeedJobService>();
+                var indeedJobService = serviceProvider.GetService<IIndeedJobService>();  
 
-                var blobStorageService = serviceProvider.GetService<IBlobStorageService>();
-
-                
                 var indeedJobDetails = new List<IndeedJobDetails>();
-
-                await indeedJobService.GetJobsFromApi(blobStorageService, indeedJobDetails);
+                await indeedJobService.GetJobsFromApi(indeedJobDetails);
 
                 var response = indeedJobService.CreateCrmJobs(indeedJobDetails);
                 response.CheckFault(log);

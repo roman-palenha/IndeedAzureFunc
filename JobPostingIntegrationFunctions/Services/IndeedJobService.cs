@@ -4,6 +4,7 @@ using JobPostingIntegrationFunctions.Services.Interfaces;
 using Microsoft.Xrm.Sdk;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Net.Http;
 using System.Threading.Tasks;
 
@@ -14,25 +15,26 @@ namespace JobPostingIntegrationFunctions.Services
         private readonly ICrmService crmService;
         private readonly IHttpRequestService httpRequestService;
         private readonly IIndeedApiConfiguration apiConfiguration;
+        private readonly IBlobStorageService blobStorageService;
 
-        public IndeedJobService(ICrmService crmService, IHttpRequestService httpRequestService)
+        public IndeedJobService(ICrmService crmService, IHttpRequestService httpRequestService, IBlobStorageService blobStorageService)
         {
             this.crmService = crmService ?? throw new ArgumentNullException(nameof(crmService));
             this.httpRequestService = httpRequestService ?? throw new ArgumentNullException(nameof(crmService));
-            this.apiConfiguration = GetApiConfiguration();
+            this.blobStorageService = blobStorageService ?? throw new ArgumentNullException(nameof(blobStorageService));
+            this.apiConfiguration = GetApiConfiguration();       
         }
 
-        public async Task GetJobsFromApi(IBlobStorageService blobStorageService, List<IndeedJobDetails> indeedJobDetails)
+        public async Task GetJobsFromApi(List<IndeedJobDetails> indeedJobDetails)
         {
             var processJobsTasks = new List<Task>();
             var integrationSettings = crmService.GetIntegrationSettings();
-            foreach(var settings in integrationSettings)
-            {
-                var jobs = await GetJobs(settings);
-                processJobsTasks.Add(ProcessJobs(jobs, blobStorageService, indeedJobDetails));
-            }
+            var tasks = integrationSettings
+                .Select(x => GetJobs(x))
+                .Select(async y => ProcessJobs(await y, indeedJobDetails));
 
-           await Task.WhenAll(processJobsTasks);
+            var res = await Task.WhenAll(tasks);
+            await Task.WhenAll(res);
         }
     
         public OrganizationResponse CreateCrmJobs(IEnumerable<IndeedJobDetails> jobDetails)
@@ -67,7 +69,7 @@ namespace JobPostingIntegrationFunctions.Services
             return await httpRequestService.ExecuteGetRequest<IndeedJobDetails>(request);
         }
 
-        private async Task ProcessJobs(IEnumerable<IndeedHit> jobs, IBlobStorageService blobStorageService, List<IndeedJobDetails> indeedJobDetails)
+        private async Task ProcessJobs(IEnumerable<IndeedHit> jobs, List<IndeedJobDetails> indeedJobDetails)
         {
             var processJobTasks = new List<Task>();
             foreach (var job in jobs)
@@ -100,7 +102,6 @@ namespace JobPostingIntegrationFunctions.Services
                 }
             }
         }
-
 
         private HttpRequestMessage CreateHttpGetRequest(string uri)
         {

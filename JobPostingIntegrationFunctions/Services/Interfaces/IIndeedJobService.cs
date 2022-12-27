@@ -7,7 +7,7 @@ namespace JobPostingIntegrationFunctions.Services.Interfaces
 {
     public interface IIndeedJobService
     {
-        Task GetJobsFromApi(IBlobStorageService blobStorageService, List<IndeedJobDetails> indeedJobDetails);
+        Task GetJobsFromApi(List<IndeedJobDetails> indeedJobDetails);
         OrganizationResponse CreateCrmJobs(IEnumerable<IndeedJobDetails> jobDetails);
         string GetColdLeadExternalId(string jsonContent);
     }

@@ -24,9 +24,9 @@ namespace JobPostingIntegrationFunctions
                 .AddSingleton<IIndeedApiConfiguration, IndeedApiConfiguration>()
                 .AddScoped<IHttpRequestService, HttpRequestService>()
                 .AddScoped<ICrmService, CrmService>()
-                .AddScoped<IIndeedJobService, IndeedJobService>()
                 .AddSingleton<IAzureBlobConfiguration, AzureBlobConfiguration>()
-                .AddScoped<IBlobStorageService, BlobStorageService>();
+                .AddScoped<IBlobStorageService, BlobStorageService>()
+                .AddScoped<IIndeedJobService, IndeedJobService>();
 
             return services.BuildServiceProvider();
         }
