@@ -1,10 +1,12 @@
 ﻿using JobPostingIntegrationFunctions.Configurations;
+using JobPostingIntegrationFunctions.Constants;
 using JobPostingIntegrationFunctions.Models;
 using JobPostingIntegrationFunctions.Services.Interfaces;
 using Microsoft.WindowsAzure.Storage;
 using Microsoft.WindowsAzure.Storage.Table;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace JobPostingIntegrationFunctions.Services
 {
@@ -35,10 +37,10 @@ namespace JobPostingIntegrationFunctions.Services
                 throw new ArgumentNullException(nameof(id));
 
             var table = GetAzureTable(Constants.AzureTable.IndeedJobs);
-            TableOperation tableOperation = TableOperation.Retrieve<BlobRecord>(id, id);
-            TableResult tableResult = table.Execute(tableOperation);
+            var tableQuery = new TableQuery<BlobRecord>().Where(TableQuery.GenerateFilterCondition(AzureTable.IdColumnName, QueryComparisons.Equal, id)).Take(1);
+            var tableResult = table.ExecuteQuery(tableQuery).FirstOrDefault();
 
-            return tableResult.Result as BlobRecord;
+            return tableResult;
         }
 
         public IEnumerable<BlobRecord> GetRecordsFromTable()

@@ -64,6 +64,7 @@
     public static class AzureTable
     {
         public const string IndeedJobs = "IndeedJobs";
+        public const string IdColumnName = "Id";
     }
 
     public static class ConnectionStrings
