@@ -81,6 +81,9 @@
     public static class StringSymbols
     {
         public const string Space = "%20";
+        public const string QuotationMark = "%22";
+        public const string Sharp = "%23";
+        public const string Percent = "%25";
     }
 
     public static class LocalizationStrings

@@ -110,7 +110,7 @@ namespace JobPostingIntegrationFunctions.Services
         private List<IntegrationSettingsDto> ParseToIntegrationSettingsDto(Entity integrationSettingsEntity)
         {
             var name = integrationSettingsEntity.GetAttributeValue<string>(IntegrationSettings.Name);
-            var query = integrationSettingsEntity.GetAttributeValue<string>(IntegrationSettings.Query).Replace(" ", StringSymbols.Space);
+            var query = integrationSettingsEntity.GetAttributeValue<string>(IntegrationSettings.Query).Replace("%", StringSymbols.Percent).Replace(" ", StringSymbols.Space).Replace("\"", StringSymbols.QuotationMark).Replace("#", StringSymbols.Sharp);
             var location = integrationSettingsEntity.GetAttributeValue<string>(IntegrationSettings.Location);
             var numberOfPages = integrationSettingsEntity.GetAttributeValue<int>(IntegrationSettings.NumberOfPages);
             var result = new List<IntegrationSettingsDto>();
