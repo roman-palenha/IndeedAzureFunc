@@ -58,7 +58,7 @@ namespace JobPostingIntegrationFunctions.Services
             uri += JobSearch.Page + integrationSetting.Page.ToString();
 
             var request = CreateHttpGetRequest(uri);
-            var response = await httpRequestService.ExecuteGetRequest<IndeedResponse>(request);
+            var response = await httpRequestService.ExecuteGetRequest<IndeedResponse>(apiConfiguration, uri);
 
             return response.Hits;
         }
@@ -66,7 +66,7 @@ namespace JobPostingIntegrationFunctions.Services
         private async Task<IndeedJobDetails> GetJobDetails(string id)
         {
             var request = CreateHttpGetRequest(JobDetails.Url + id);
-            return await httpRequestService.ExecuteGetRequest<IndeedJobDetails>(request);
+            return await httpRequestService.ExecuteGetRequest<IndeedJobDetails>(apiConfiguration, JobDetails.Url + id);
         }
 
         private async Task ProcessJobs(IEnumerable<IndeedHit> jobs, List<IndeedJobDetails> indeedJobDetails)

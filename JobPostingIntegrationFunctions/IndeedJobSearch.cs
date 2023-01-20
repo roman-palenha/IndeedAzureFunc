@@ -26,7 +26,6 @@ namespace JobPostingIntegrationFunctions
 
                 var response = indeedJobService.CreateCrmJobs(indeedJobDetails);
                 response.CheckFault(log);
-                    
             }
             catch (Exception ex)
             {

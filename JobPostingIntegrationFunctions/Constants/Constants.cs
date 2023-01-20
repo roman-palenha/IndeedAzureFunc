@@ -57,7 +57,7 @@
     public static class IndeedHitConstants
     {
         public const string More30Days = "30+ days ago";
-        public const string JustPosted = "Just Posted";
+        public const string JustPosted = "Just posted";
         public const string Today = "Today";
     }
 
